@@ -1,0 +1,1611 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sistema Ejecutiva Ambiental - Perfil de Datos & Orden de Trabajo</title>
+
+  <!-- ========= ESTILOS ========= -->
+  <style>
+    *{box-sizing:border-box}
+
+    body{
+      font-family: Arial, sans-serif;
+      margin:0; padding:20px;
+      background:#f5f5f5; font-size:12px;
+    }
+    .main-container{max-width:1200px;margin:0 auto;}
+
+    /* Tabs */
+    .nav-tabs{display:flex;background:#fff;border-radius:8px 8px 0 0;overflow:hidden;box-shadow:0 2px 4px rgba(0,0,0,.1)}
+    .nav-tab{flex:1;padding:15px 20px;background:#e9ecef;border:0;cursor:pointer;font-weight:bold;font-size:14px;transition:.3s;display:flex;align-items:center;justify-content:center;gap:8px}
+    .nav-tab.active{background:#1e5a3e;color:#fff}
+    .nav-tab:hover:not(.active){background:#dee2e6}
+    .tab-content{display:none;background:#fff;border-radius:0 0 8px 8px;box-shadow:0 2px 10px rgba(0,0,0,.1);min-height:600px}
+    .tab-content.active{display:block}
+
+    /* Barras de acciones */
+    .excel-controls{background:linear-gradient(135deg,#f8f9fa,#e9ecef);padding:15px;margin-bottom:0;border-left:4px solid #1e5a3e;display:flex;align-items:center;flex-wrap:wrap;gap:10px}
+    .excel-controls button{background:#1e5a3e;color:#fff;border:0;padding:8px 15px;border-radius:4px;cursor:pointer;font-size:11px}
+    .excel-controls button:hover{background:#2d7a4f}
+    .file-input-label{background:#6c757d;color:#fff;padding:8px 15px;border-radius:4px;cursor:pointer;font-size:11px;display:inline-block}
+    .file-input-label:hover{background:#5a6268}
+    .file-input-label input{display:none}
+    .status-message{margin-left:10px;padding:5px 10px;border-radius:4px;font-size:10px;font-weight:bold}
+    .status-success{background:#d4edda;color:#155724}
+    .status-error{background:#f8d7da;color:#721c24}
+    .status-warning{background:#fff3cd;color:#856404}
+
+    /* Encabezados */
+    .header{background:linear-gradient(135deg,#1e5a3e,#2d7a4f);color:#fff;padding:15px;display:flex;justify-content:space-between;align-items:center}
+    .logo-section{display:flex;align-items:center;gap:10px}
+    .logo{width:40px;height:40px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#1e5a3e;font-weight:bold}
+    .company-info h1{margin:0;font-size:16px;font-weight:bold}
+    .company-info p{margin:2px 0;font-size:10px;opacity:.9}
+    .document-info h2{margin:0;font-size:18px;font-weight:bold}
+
+    .section{border-bottom:1px solid #ddd}
+    .section-header{background:#1e5a3e;color:#fff;padding:8px 15px;font-weight:bold;font-size:11px;text-transform:uppercase;letter-spacing:.5px}
+    .section-content{padding:15px}
+
+    .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-bottom:15px}
+    .form-group{display:flex;flex-direction:column}
+    .form-group.full-width{grid-column:1 / -1}
+    label{font-weight:bold;color:#333;margin-bottom:3px;font-size:10px;text-transform:uppercase}
+    input[type="text"],input[type="date"],input[type="tel"],input[type="email"],textarea,select{border:1px solid #ccc;padding:6px 8px;font-size:11px;border-radius:3px;background:#f9f9f9}
+    input:focus,textarea:focus,select:focus{outline:0;border-color:#1e5a3e;background:#fff}
+    textarea{resize:vertical;min-height:60px}
+
+    /* Tabla OT */
+    .work-table{width:100%;border-collapse:collapse;margin-top:10px;table-layout:fixed;background:#fff}
+    .work-table th{background:#1e5a3e;color:#fff;font-weight:bold;text-align:center;padding:8px 4px;font-size:11px;border:1px solid #1e5a3e;white-space:normal;word-wrap:break-word}
+    .work-table td{border:1px solid #ddd;padding:4px;text-align:left;font-size:10px;vertical-align:middle;background:#fff}
+    .work-table input[type="text"],.work-table input[type="date"],.work-table select,.work-table textarea{border:1px solid transparent;width:100%;height:28px;padding:2px 4px;background:#f9f9f9;font-size:10px;margin:0;box-sizing:border-box}
+    .work-table textarea{min-height:28px;resize:vertical;font-family:Arial, sans-serif}
+    .work-table input:focus,.work-table textarea:focus,.work-table select:focus{background:#fff;border:1px solid #1e5a3e;outline:none}
+    .add-row-btn{background:#28a745;color:#fff;border:0;padding:8px 15px;border-radius:3px;cursor:pointer;font-size:11px;margin-top:10px}
+    .add-row-btn:hover{background:#218838}
+    .remove-row-btn{background:#dc3545;color:#fff;border:0;padding:4px 8px;border-radius:3px;cursor:pointer;font-size:10px}
+    .remove-row-btn:hover{background:#c82333}
+
+    /* Indicador de sync */
+    .data-sync-indicator{position:fixed;top:20px;right:20px;background:#1e5a3e;color:#fff;padding:8px 15px;border-radius:20px;font-size:11px;z-index:1000;opacity:0;transition:opacity .3s}
+    .data-sync-indicator.show{opacity:1}
+
+    .excel-mapping-info{background:#e3f2fd;border:1px solid #1976d2;border-radius:4px;padding:10px;margin:10px 0;font-size:10px}
+    .excel-mapping-info strong{color:#1976d2}
+
+    /* Impresión */
+    @media print{
+      .nav-tabs,.excel-controls,.excel-mapping-info{display:none}
+      body{background:#fff;padding:0;font-size:11px}
+      .main-container{margin:0;max-width:none;padding:0}
+      @page{size:A4;margin:10mm}
+    }
+
+    /* Estilos para generadores de texto */
+    .template-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:15px;margin:15px 0}
+    .template-card{border:1px solid #e3e3e3;border-radius:8px;padding:15px;cursor:pointer;background:#fff;transition:.3s;position:relative}
+    .template-card:hover{border-color:#1e5a3e;box-shadow:0 2px 8px rgba(30,90,62,.1)}
+    .template-card.selected{border-color:#1e5a3e;box-shadow:0 0 0 2px #1e5a3e22}
+    .template-card h4{margin:0 0 8px;color:#1e5a3e;font-size:14px}
+    .template-card p{margin:0;color:#666;font-size:11px}
+    .text-output{background:#f8f9fa;border:1px solid #ddd;border-radius:4px;padding:15px;min-height:200px;white-space:pre-wrap;font-family:monospace;font-size:11px;margin:10px 0}
+    .copy-btn{background:#28a745;color:#fff;border:0;padding:8px 15px;border-radius:4px;cursor:pointer;font-size:11px;margin-top:10px}
+    .copy-btn:hover{background:#218838}
+
+    /* Documentos PDF */
+    .document-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:15px;margin:15px 0}
+    .document-card{border:1px solid #e3e3e3;border-radius:8px;padding:15px;background:#fff}
+    .document-card h4{margin:0 0 10px;color:#1e5a3e;font-size:14px}
+    .document-card p{margin:0 0 10px;color:#666;font-size:11px}
+    .document-actions{display:flex;gap:8px;flex-wrap:wrap}
+    .pdf-btn{background:#dc3545;color:#fff;border:0;padding:6px 12px;border-radius:4px;cursor:pointer;font-size:10px}
+    .pdf-btn:hover{background:#c82333}
+
+    @media print{
+      #textTab,#documentsTab{display:none !important;}
+    }
+  </style>
+
+</head>
+
+<body>
+<div class="main-container">
+
+  <!-- Indicador -->
+  <div id="syncIndicator" class="data-sync-indicator">✓ Datos sincronizados</div>
+
+  <!-- Tabs -->
+  <div class="nav-tabs">
+    <button class="nav-tab active" id="profileTabButton" onclick="switchTab('profile')">👤 Perfil</button>
+    <button class="nav-tab" id="workorderTabButton" onclick="switchTab('workorder')">📋 Orden de trabajo</button>
+    <button class="nav-tab" id="textTabButton" onclick="switchTab('text')">📝 Textos</button>
+    <button class="nav-tab" id="documentsTabButton" onclick="switchTab('documents')">📄 Documentos</button>
+  </div>
+
+  <!-- ================= TAB 1: PERFIL ================= -->
+  <div id="profileTab" class="tab-content active">
+    <div class="excel-controls">
+      <strong>📊 Gestión de Perfil:</strong>
+      <label class="file-input-label">📂 Examinar...
+        <input type="file" id="profileFile" accept=".xlsx,.xls"/>
+      </label>
+      <span id="fileSelectedName" style="font-size:10px;color:#666;margin-right:10px;">No se ha seleccionado ningún archivo.</span>
+      <button onclick="loadProfile()">Cargar Perfil</button>
+      <button onclick="saveProfile()">Guardar Perfil</button>
+      <button onclick="downloadProfileTemplate()">Plantilla Perfil</button>
+      <button onclick="exportToExcelFormat()">Exportar Formato Excel</button>
+      <button onclick="sendToClient()">Enviar a Cliente</button>
+      <span id="profileStatus"></span>
+    </div>
+
+    <div class="excel-mapping-info">
+      <strong>📊 Mapeo Excel:</strong> Los datos se exportan con el formato estándar de celdas. Para celdas combinadas, el sistema toma automáticamente el valor de la celda izquierda superior.
+    </div>
+
+    <div class="header">
+      <div class="logo-section">
+        <div class="logo">EA</div>
+        <div class="company-info">
+          <h1>EJECUTIVA AMBIENTAL</h1>
+          <p>SEGURIDAD E HIGIENE, CAPACITACIÓN, MANTENIMIENTO INDUSTRIAL, PROTECCIÓN CIVIL, MEDIO AMBIENTE</p>
+        </div>
+      </div>
+      <div class="document-info">
+        <h2>PERFIL DE DATOS DEL CLIENTE</h2>
+        <p>Información General y Contacto</p>
+      </div>
+    </div>
+
+    <!-- Info general -->
+    <div class="section">
+      <div class="section-header">Información General</div>
+      <div class="section-content">
+        <div class="form-grid">
+          <div class="form-group"><label>Nombre y puesto solicitante</label><input type="text" id="requestorName" onchange="syncData()" data-excel="D3"></div>
+          <div class="form-group"><label>Teléfono</label><input type="tel" id="requestorPhone" onchange="syncData()" data-excel="I7" placeholder="Teléfono de la empresa"></div>
+          <div class="form-group full-width"><label>Denominación/Razón Social</label><input type="text" id="companyName" onchange="syncData()" data-excel="D5"></div>
+          <div class="form-group"><label>RFC</label><input type="text" id="rfc" onchange="syncData()" data-excel="D7"></div>
+          <div class="form-group"><label>Sucursal</label><input type="text" id="branch" onchange="syncData()" placeholder="Ej: Sucursal Centro, Planta Norte"></div>
+          <div class="form-group full-width"><label>Representante Legal</label><input type="text" id="legalRep" onchange="syncData()" data-excel="D9"></div>
+          <div class="form-group full-width"><label>Dirección donde se evaluará</label><textarea id="evaluationAddress" onchange="syncData()" data-excel="D11"></textarea></div>
+          <div class="form-group"><label>Responsable de atendernos</label><input type="text" id="contactPerson" onchange="syncData()" data-excel="D13"></div>
+          <div class="form-group"><label>Teléfono</label><input type="tel" id="contactPhone" onchange="syncData()" data-excel="I13"></div>
+          <div class="form-group full-width"><label>Giro</label><input type="text" id="businessType" onchange="syncData()" data-excel="D15"></div>
+          <div class="form-group full-width"><label>Actividad Principal</label><textarea id="mainActivity" onchange="syncData()" data-excel="D17"></textarea></div>
+          <div class="form-group"><label>Registro Patronal</label><input type="text" id="patronalRegistry" onchange="syncData()" data-excel="D19"></div>
+          <div class="form-group"><label>Capacidad de Operación</label><input type="text" id="operationCapacity" onchange="syncData()" data-excel="D21"></div>
+          <div class="form-group"><label>Capacidad Instalada</label><input type="text" id="installedCapacity" onchange="syncData()" data-excel="I21"></div>
+          <div class="form-group full-width"><label>Días, turnos y horarios de trabajo</label><textarea id="workSchedule" onchange="syncData()" data-excel="D23"></textarea></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header">Sobre el Informe de Resultados</div>
+      <div class="section-content">
+        <div class="form-grid">
+          <div class="form-group"><label>Nombre de a quien se dirige</label><input type="text" id="reportRecipientName" onchange="syncData()" data-excel="D26"></div>
+          <div class="form-group"><label>Puesto de a quien se dirige</label><input type="text" id="reportRecipientPosition" onchange="syncData()" data-excel="D28"></div>
+          <div class="form-group full-width"><label>Correo a enviar el informe digital</label><input type="email" id="reportEmail" onchange="syncData()" data-excel="D30"></div>
+        </div>
+        <div class="form-group full-width">
+          <label>Breve descripción del proceso operativo o productivo</label>
+          <textarea id="processDescription" onchange="syncData()" style="min-height:100px;"></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= TAB 2: ORDEN DE TRABAJO ================= -->
+  <div id="workorderTab" class="tab-content">
+    <div class="excel-controls">
+      <strong>🔧 Gestión de Orden:</strong>
+      <button onclick="generateWorkOrder()">Generar desde Perfil</button>
+      <button onclick="saveWorkOrder()">Guardar Orden</button>
+      <button onclick="printWorkOrder()">Imprimir/PDF</button>
+      <button onclick="sendWorkOrder()">Enviar por Email</button>
+      <span id="workorderStatus"></span>
+    </div>
+
+    <div class="header">
+      <div class="logo-section">
+        <div class="logo">EA</div>
+        <div class="company-info">
+          <h1>EJECUTIVA AMBIENTAL</h1>
+          <p>SEGURIDAD E HIGIENE, CAPACITACIÓN MANTENIMIENTO INDUSTRIAL, PROTECCIÓN CIVIL, MEDIO AMBIENTE</p>
+        </div>
+      </div>
+      <div class="document-info">
+        <h2>ORDEN DE TRABAJO</h2>
+        <p id="workOrderPageInfo">Página 1 de 1</p>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header">Información del Servicio</div>
+      <div class="section-content">
+        <div class="form-grid">
+          <div class="form-group"><label>N° de Orden de Servicio</label><input type="text" id="wo_orderNumber" placeholder="OT25-0123-XX"></div>
+          <div class="form-group"><label>Fecha de Emisión</label><input type="date" id="wo_issueDate"></div>
+          <div class="form-group"><label>Referencia de Cotización</label><input type="text" id="wo_quoteRef"></div>
+          <div class="form-group"><label><!-- vacio --></label><div></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header">Información del Cliente (Auto-generada desde Perfil)</div>
+      <div class="section-content">
+        <div class="form-grid">
+          <div class="form-group"><label>Nombre o Razón Social</label><input type="text" id="wo_clientName" readonly style="background:#e9ecef"></div>
+          <div class="form-group"><label>Sucursal</label><input type="text" id="wo_branch" readonly style="background:#e9ecef"></div>
+          <div class="form-group full-width"><label>Dirección del Servicio</label><input type="text" id="wo_serviceAddress" readonly style="background:#e9ecef"></div>
+          <div class="form-group"><label>Responsable de atendernos</label><input type="text" id="wo_contactName" readonly style="background:#e9ecef"></div>
+          <div class="form-group"><label>Teléfono</label><input type="tel" id="wo_phone" readonly style="background:#e9ecef"></div>
+          <div class="form-group"><label>Email</label><input type="email" id="wo_email" placeholder="Editable - completar manualmente"></div>
+        </div>
+        <div class="form-group">
+          <label>Destinatario del Informe</label>
+          <div class="form-grid">
+            <div class="form-group"><label>Nombre</label><input type="text" id="wo_reportTo" readonly style="background:#e9ecef"></div>
+            <div class="form-group"><label>Puesto</label><input type="text" id="wo_reportPosition" readonly style="background:#e9ecef"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header">Desarrollo del Trabajo</div>
+      <div class="section-content">
+        <table class="work-table" id="workTable">
+          <thead>
+          <tr>
+            <th style="width:15%">SERVICIO</th>
+            <th style="width:15%">PERSONAL ASIGNADO</th>
+            <th style="width:15%">FECHA</th>
+            <th style="width:15%">CANTIDAD</th>
+            <th style="width:38%">OBSERVACIONES</th>
+            <th style="width:2%"></th>
+          </tr>
+          </thead>
+          <tbody id="workTableBody">
+          <tr>
+            <td><input type="text" placeholder="NOM-XXX-STPS"></td>
+            <td>
+              <select>
+                <option value="">Seleccionar...</option>
+                <option>Martín Luna</option>
+                <option>Jimmy Ayala</option>
+                <option>Iván Zárate</option>
+                <option>Eduardo Campos</option>
+                <option>Adrián H</option>
+                <option>Externo</option>
+              </select>
+            </td>
+            <td><input type="date"></td>
+            <td><input type="text" placeholder="5 dosis, 10 RSP, etc..."></td>
+            <td><textarea rows="2"></textarea></td>
+            <td style="text-align:center;"><button class="remove-row-btn" onclick="removeRow(this)">✖</button></td>
+          </tr>
+          </tbody>
+        </table>
+        <button class="add-row-btn" onclick="addWorkRow()">+ Agregar Fila</button>
+
+        <div class="form-group full-width" style="margin-top:15px;">
+          <label>Observaciones Generales</label>
+          <textarea id="wo_generalObservations" style="min-height:80px;" placeholder="📋 RECORDATORIO: Portar EPP..."></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header">Autorización y Firmas</div>
+      <div class="section-content">
+        <div class="form-grid">
+          <div class="form-group"><label>Realizó</label><input type="text" id="wo_preparedBy" placeholder="Nombre de quien elaboró"></div>
+          <div class="form-group"><label>Autorizó</label><input type="text" id="wo_authorizedBy" value="ING. EDUWIN IVÁN HERNÁNDEZ ZÁRATE - DIRECTOR" readonly style="background:#e9ecef"></div>
+        </div>
+        <div class="form-group full-width" style="margin-top:20px;padding:15px;border:1px solid #ddd;border-radius:4px;background:#f8f9fa;">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+            <div style="flex:2;margin-right:20px;">
+              <label style="font-weight:bold;color:#1e5a3e;">Firma del Cliente</label>
+              <p style="margin:10px 0;font-style:italic;font-size:11px;">"He recibido visita del proveedor para la realización de los servicios señalados en la presente orden."</p>
+              <div style="margin-top:30px;border-bottom:1px solid #333;width:70%;display:inline-block;"></div>
+              <p style="margin:5px 0;font-size:10px;">Firma y Nombre del Cliente</p>
+            </div>
+            <div style="flex:1;text-align:center;">
+              <div id="qrCodeContainer" style="text-align:center;padding:10px;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= TAB 3: GENERADOR DE TEXTOS ================= -->
+  <div id="textTab" class="tab-content">
+    <div class="excel-controls">
+      <strong>📝 Generador de Textos:</strong>
+      <button onclick="generateTextFromProfile()">Auto-completar desde Perfil</button>
+      <button onclick="copyTextToClipboard()">Copiar Texto</button>
+      <span id="textStatus"></span>
+    </div>
+
+    <div class="section">
+      <div class="section-header">Seleccionar Tipo de Texto</div>
+      <div class="section-content">
+        <div class="template-grid">
+          <div class="template-card" onclick="selectTextTemplate('email_profile', this)">
+            <h4>📧 Email - Solicitud de Perfil</h4>
+            <p>Para solicitar datos del cliente</p>
+          </div>
+          <div class="template-card" onclick="selectTextTemplate('email_workorder', this)">
+            <h4>📧 Email - Orden de Trabajo</h4>
+            <p>Envío de orden con detalles</p>
+          </div>
+          <div class="template-card" onclick="selectTextTemplate('email_followup', this)">
+            <h4>📧 Email - Seguimiento</h4>
+            <p>Recordatorio y coordinación</p>
+          </div>
+          <div class="template-card" onclick="selectTextTemplate('email_quote', this)">
+            <h4>📧 Email - Cotización</h4>
+            <p>Envío de presupuesto</p>
+          </div>
+          <div class="template-card" onclick="selectTextTemplate('email_results', this)">
+            <h4>📧 Email - Resultados</h4>
+            <p>Entrega de informe final</p>
+          </div>
+          <div class="template-card" onclick="selectTextTemplate('receipt', this)">
+            <h4>💰 Recibo de Pago</h4>
+            <p>Comprobante de pago membretado</p>
+          </div>
+          <div class="template-card" onclick="selectTextTemplate('status_letter', this)">
+            <h4>📄 Carta Estatus</h4>
+            <p>Estado del servicio o proyecto</p>
+          </div>
+          <div class="template-card" onclick="selectTextTemplate('memo', this)">
+            <h4>📝 Memorándum</h4>
+            <p>Comunicación interna</p>
+          </div>
+          <div class="template-card" onclick="selectTextTemplate('invoice', this)">
+            <h4>📋 Datos bancarios </h4>
+            <p>Documento de facturación</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header">Texto Generado</div>
+      <div class="section-content">
+        <div class="text-output" id="textOutput">Selecciona un tipo de texto para generar el contenido...</div>
+        <button class="copy-btn" onclick="copyTextToClipboard()">📋 Copiar al Portapapeles</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= TAB 4: DOCUMENTOS PDF ================= -->
+  <div id="documentsTab" class="tab-content">
+    <div class="excel-controls">
+      <strong>📄 Generador de Documentos:</strong>
+      <button onclick="generateDocumentData()">Auto-completar desde Perfil</button>
+      <span id="documentsStatus"></span>
+    </div>
+
+    <div class="section">
+      <div class="section-header">Documentos Disponibles</div>
+      <div class="section-content">
+        <div class="document-grid">
+          <div class="document-card">
+            <h4>🏛️ Carta Poder STPS</h4>
+            <p>Documento oficial para la Secretaría del Trabajo y Previsión Social</p>
+            <div class="document-actions">
+              <button class="pdf-btn" onclick="generateSTPS()">Auto-completar</button>
+              <button class="pdf-btn" onclick="downloadSTPS()">Descargar PDF</button>
+            </div>
+          </div>
+          
+          <div class="document-card">
+            <h4>📋 Carta de Servicios</h4>
+            <p>Documento que certifica los servicios realizados</p>
+            <div class="document-actions">
+              <button class="pdf-btn" onclick="generateServiceLetter()">Generar</button>
+              <button class="pdf-btn" onclick="downloadServiceLetter()">Descargar PDF</button>
+            </div>
+          </div>
+
+          <div class="document-card">
+            <h4>📄 Constancia de Cumplimiento</h4>
+            <p>Certificado de cumplimiento normativo</p>
+            <div class="document-actions">
+              <button class="pdf-btn" onclick="generateComplianceLetter()">Generar</button>
+              <button class="pdf-btn" onclick="downloadComplianceLetter()">Descargar PDF</button>
+            </div>
+          </div>
+
+          <div class="document-card">
+            <h4>📝 Acta de Reunión</h4>
+            <p>Documento de minuta de reunión técnica</p>
+            <div class="document-actions">
+              <button class="pdf-btn" onclick="generateMeetingAct()">Generar</button>
+              <button class="pdf-btn" onclick="downloadMeetingAct()">Descargar PDF</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Carta Poder STPS (mantener la funcionalidad existente) -->
+    <div class="section" id="stpsSection">
+      <div class="section-header">Configuración - Carta Poder STPS</div>
+      <div class="section-content">
+        <div class="form-grid">
+          <div class="form-group full-width">
+            <label>Línea 2 (Dependencia)</label>
+            <input type="text" id="stps_officeLine2" value="OFICINA DE REPRESENTACIÓN FEDERAL DEL TRABAJO EN EL ESTADO DE PUEBLA CON SEDE EN PUEBLA">
+          </div>
+          <div class="form-group full-width">
+            <label>Línea 3 (Domicilio)</label>
+            <input type="text" id="stps_officeLine3" value="EDIFICIO SELAFE, AV. 31 PONIENTE NO. 2904, P.B., COL. EL VERGEL, C.P. 72400, PUEBLA, PUEBLA">
+          </div>
+        </div>
+        
+        <div class="form-grid">
+          <div class="form-group full-width">
+            <label>Selecciona una o varias personas autorizadas</label>
+            <div>
+              <label><input type="checkbox" class="authCheck" value="Gonzalo Eli Torres Quiroz"> Gonzalo Eli Torres Quiroz</label><br/>
+              <label><input type="checkbox" class="authCheck" value="Eduwin Iván Hernández Zárate"> Eduwin Iván Hernández Zárate</label><br/>
+              <label><input type="checkbox" class="authCheck" value="Jimmy Jeynson Ayala Borrallez"> Jimmy Jeynson Ayala Borrallez</label><br/>
+              <label><input type="checkbox" class="authCheck" value="Martín Luna Córdova"> Martín Luna Córdova</label>
+            </div>
+            <div style="margin-top:8px;">
+              <label>Otro (editable):</label>
+              <input type="text" id="stps_otherName" placeholder="Escribe otro nombre completo">
+            </div>
+            
+            <div class="form-group full-width">
+              <label>Lista final (puedes editar manualmente)</label>
+              <textarea id="stps_authorizedPersons" style="min-height:70px;" placeholder="Nombres completos separados por comas"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group"><label>Testigo 1</label><input type="text" id="stps_witness1" placeholder="Nombre completo del testigo 1"></div>
+          <div class="form-group"><label>Testigo 2</label><input type="text" id="stps_witness2" placeholder="Nombre completo del testigo 2"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ========= LIBRERÍAS ========= -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<!-- ========= SCRIPT PRINCIPAL ========= -->
+<script>
+  // Variables globales
+  let profileData = {};
+  let workOrderData = {};
+  let selectedTextTemplate = null;
+
+  const excelCellMapping = {
+    'requestorName':'D3','companyName':'D5','rfc':'D7','requestorPhone':'I7','legalRep':'D9',
+    'evaluationAddress':'D11','contactPerson':'D13','contactPhone':'I13','businessType':'D15',
+    'mainActivity':'D17','patronalRegistry':'D19','operationCapacity':'D21','installedCapacity':'I21',
+    'workSchedule':'D23','reportRecipientName':'D26','reportEmail':'D30','reportRecipientPosition':'D28'
+  };
+
+  // Funciones de utilidad
+  function getCellValue(ws, cellRef) {
+    try {
+      const c = ws[cellRef];
+      return (c && c.v !== undefined) ? c.v : '';
+    } catch(e) {
+      return '';
+    }
+  }
+
+  function setCellValue(ws, cellRef, value) {
+    try {
+      if (value !== undefined && value !== null && value !== '') {
+        ws[cellRef] = {v: value, t: 's'};
+      }
+    } catch(e) {
+      console.error('Error setting cell value:', e);
+    }
+  }
+
+  function showStatus(elementId, message, type = 'success') {
+    const element = document.getElementById(elementId);
+    if (!element) return;
+    
+    element.innerHTML = `<span class="status-message status-${type}">${message}</span>`;
+    setTimeout(() => {
+      element.innerHTML = '';
+    }, 3000);
+  }
+
+  function showSyncIndicator() {
+    const el = document.getElementById('syncIndicator');
+    if (el) {
+      el.classList.add('show');
+      setTimeout(() => el.classList.remove('show'), 2000);
+    }
+  }
+
+  function copyToClipboard(text) {
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(text).then(() => {
+        console.log('Texto copiado al portapapeles');
+      }).catch(err => {
+        console.error('Error al copiar:', err);
+      });
+    } else {
+      // Fallback para navegadores más antiguos
+      const textArea = document.createElement('textarea');
+      textArea.value = text;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+    }
+  }
+
+  // Función para cambiar pestañas
+  function switchTab(name) {
+    try { 
+      window.scrollTo({top: 0, behavior: 'smooth'}); 
+    } catch(e) { 
+      window.scrollTo(0, 0); 
+    }
+    
+    // Remover clases activas
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    
+    // Activar pestaña correspondiente
+    const tabMap = {
+      'profile': { content: 'profileTab', button: 'profileTabButton' },
+      'workorder': { content: 'workorderTab', button: 'workorderTabButton' },
+      'text': { content: 'textTab', button: 'textTabButton' },
+      'documents': { content: 'documentsTab', button: 'documentsTabButton' }
+    };
+    
+    if (tabMap[name]) {
+      const contentEl = document.getElementById(tabMap[name].content);
+      const buttonEl = document.getElementById(tabMap[name].button);
+      
+      if (contentEl) contentEl.classList.add('active');
+      if (buttonEl) buttonEl.classList.add('active');
+    }
+  }
+
+  // Función principal de sincronización
+  function syncData() {
+    const fields = [
+      'requestorName','requestorPhone','companyName','rfc','branch','legalRep',
+      'evaluationAddress','contactPerson','contactPhone','businessType','mainActivity',
+      'patronalRegistry','operationCapacity','installedCapacity','workSchedule',
+      'reportRecipientName','reportRecipientPosition','reportEmail','processDescription'
+    ];
+    
+    fields.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        profileData[id] = (el.type === 'checkbox') ? el.checked : el.value;
+      }
+    });
+    
+    updateWorkOrderFromProfile();
+    showSyncIndicator();
+  }
+
+  function updateWorkOrderFromProfile() {
+    const map = {
+      'companyName': 'wo_clientName',
+      'branch': 'wo_branch',
+      'evaluationAddress': 'wo_serviceAddress',
+      'contactPerson': 'wo_contactName',
+      'contactPhone': 'wo_phone',
+      'reportRecipientName': 'wo_reportTo',
+      'reportRecipientPosition': 'wo_reportPosition'
+    };
+    
+    Object.keys(map).forEach(k => {
+      const v = profileData[k] || '';
+      const f = document.getElementById(map[k]);
+      if (f) {
+        f.value = v;
+      }
+    });
+  }
+
+  // Funciones de perfil
+  function loadProfile() {
+    const input = document.getElementById('profileFile');
+    const file = input?.files[0];
+    
+    if (!file) {
+      showStatus('profileStatus', 'Selecciona un archivo Excel', 'warning');
+      return;
+    }
+    
+    const reader = new FileReader();
+    reader.onload = e => {
+      try {
+        const data = new Uint8Array(e.target.result);
+        const wb = XLSX.read(data, {type: 'array'});
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        populateProfileFromExcel(ws);
+        showStatus('profileStatus', 'Perfil cargado exitosamente', 'success');
+      } catch(err) {
+        console.error(err);
+        showStatus('profileStatus', 'Error al leer archivo Excel', 'error');
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  function populateProfileFromExcel(ws) {
+    Object.keys(excelCellMapping).forEach(id => {
+      const ref = excelCellMapping[id];
+      const val = getCellValue(ws, ref);
+      const el = document.getElementById(id);
+      
+      if (el && val) {
+        if (el.type === 'checkbox') {
+          el.checked = ['SI', 'YES', 'TRUE', '1', true].includes(String(val).toUpperCase());
+        } else {
+          el.value = String(val);
+        }
+      }
+    });
+    syncData();
+  }
+
+  function saveProfile() {
+    try {
+      const wb = XLSX.utils.book_new();
+      const wsData = {};
+      
+      Object.keys(excelCellMapping).forEach(id => {
+        const el = document.getElementById(id);
+        const ref = excelCellMapping[id];
+        if (el && el.value) {
+          setCellValue(wsData, ref, el.value);
+        }
+      });
+      
+      const ws = XLSX.utils.json_to_sheet([]);
+      Object.keys(wsData).forEach(r => ws[r] = wsData[r]);
+      XLSX.utils.book_append_sheet(wb, ws, "Perfil_Cliente");
+      
+      const name = profileData.companyName || 'Cliente';
+      const fileName = `Perfil_${name.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().split('T')[0]}.xlsx`;
+      XLSX.writeFile(wb, fileName);
+      
+      showStatus('profileStatus', 'Perfil guardado correctamente', 'success');
+    } catch(err) {
+      console.error(err);
+      showStatus('profileStatus', 'Error al guardar perfil', 'error');
+    }
+  }
+
+  function downloadProfileTemplate() {
+    try {
+      const wb = XLSX.utils.book_new();
+      const data = {};
+      
+      const examples = {
+        'D3': 'Juan Pérez - Gerente',
+        'D5': 'Empresa Ejemplo S.A. de C.V.',
+        'D7': 'EEJ123456ABC',
+        'I7': '222-123-4567',
+        'D9': 'María González',
+        'D11': 'Av. Principal 123, Puebla, Pue.',
+        'D13': 'Ana Martínez',
+        'I13': '222-987-6543',
+        'D15': 'Manufactura Industrial',
+        'D17': 'Fabricación de metálicos',
+        'D19': 'RP-12345-2023',
+        'D21': '1000 u/día',
+        'I21': '1500 u/día',
+        'D23': 'L-V 7:00-15:00',
+        'D26': 'informes@empresa.com',
+        'D28': 'Director Técnico',
+        'D30': 'gerencia@empresa.com'
+      };
+      
+      Object.keys(examples).forEach(r => setCellValue(data, r, examples[r]));
+      
+      const ws = XLSX.utils.json_to_sheet([]);
+      Object.keys(data).forEach(r => ws[r] = data[r]);
+      XLSX.utils.book_append_sheet(wb, ws, "Plantilla");
+      
+      XLSX.writeFile(wb, "Plantilla_Perfil_Cliente_EA.xlsx");
+      showStatus('profileStatus', 'Plantilla descargada correctamente', 'success');
+    } catch(err) {
+      console.error(err);
+      showStatus('profileStatus', 'Error al generar plantilla', 'error');
+    }
+  }
+
+  function exportToExcelFormat() {
+    saveProfile();
+  }
+
+  function sendToClient() {
+    const email = document.getElementById('reportEmail')?.value;
+    const company = document.getElementById('companyName')?.value || 'Su Empresa';
+    
+    if (!email) {
+      showStatus('profileStatus', 'Ingresa un email de contacto primero', 'warning');
+      return;
+    }
+    
+    const subject = `Perfil de Datos - ${company} - Ejecutiva Ambiental`;
+    const body = `Estimado cliente,
+
+Adjunto encontrará la plantilla del Perfil de Datos para completar con la información de su empresa.
+
+Saludos cordiales,
+Ejecutiva Ambiental`;
+
+    window.location.href = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    showStatus('profileStatus', 'Cliente de email abierto', 'success');
+  }
+
+  // Funciones de orden de trabajo
+  function generateWorkOrder() {
+    const today = new Date();
+    const dateInput = document.getElementById('wo_issueDate');
+    if (dateInput) {
+      dateInput.value = today.toISOString().split('T')[0];
+    }
+    
+    const orderInput = document.getElementById('wo_orderNumber');
+    if (orderInput) {
+      const orderNum = `OT${String(today.getFullYear() % 100).padStart(2, '0')}-${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}-`;
+      orderInput.value = orderNum;
+    }
+    
+    syncData();
+    generateQRCode();
+    showStatus('workorderStatus', 'Orden de trabajo generada automáticamente', 'success');
+  }
+
+  function generateQRCode() {
+    const cont = document.getElementById('qrCodeContainer');
+    if (!cont) return;
+    
+    cont.innerHTML = '';
+    
+    const img = document.createElement('img');
+    img.src = 'https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=tel:2229417295';
+    img.alt = 'Llamar al 2229417295';
+    img.style.cssText = 'width:80px;height:80px;border:1px solid #ccc;border-radius:4px;';
+    cont.appendChild(img);
+    
+    const txt = document.createElement('div');
+    txt.textContent = 'Dudas: 2229417295';
+    txt.style.cssText = 'font-size:8px;text-align:center;margin-top:2px;';
+    cont.appendChild(txt);
+  }
+
+  function addWorkRow() {
+    const tbody = document.getElementById('workTableBody');
+    if (!tbody) return;
+    
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><input type="text" placeholder="NOM-XXX-STPS"></td>
+      <td>
+        <select>
+          <option value="">Seleccionar...</option>
+          <option>Martín Luna</option>
+          <option>Jimmy Ayala</option>
+          <option>Iván Zárate</option>
+          <option>Gonzalo Torres</option>
+          <option>Eduardo Campos</option>
+          <option>Adrián H</option>
+          <option>Externo</option>
+        </select>
+      </td>
+      <td><input type="date"></td>
+      <td><input type="text" placeholder="Ruido, Vibración, etc."></td>
+      <td><textarea rows="2"></textarea></td>
+      <td style="text-align:center;"><button class="remove-row-btn" onclick="removeRow(this)">✖</button></td>`;
+    tbody.appendChild(tr);
+  }
+
+  function removeRow(btn) {
+    if (btn && btn.closest) {
+      btn.closest('tr').remove();
+    }
+  }
+
+  function saveWorkOrder() {
+    try {
+      const orderNumber = document.getElementById('wo_orderNumber')?.value || 'Nueva';
+      const issueDate = document.getElementById('wo_issueDate')?.value || '';
+      const quoteRef = document.getElementById('wo_quoteRef')?.value || '';
+      
+      const data = {
+        'Numero_Orden': orderNumber,
+        'Fecha_Emision': issueDate,
+        'Referencia_Cotizacion': quoteRef,
+        'Cliente': document.getElementById('wo_clientName')?.value || '',
+        'Sucursal': document.getElementById('wo_branch')?.value || '',
+        'Direccion_Servicio': document.getElementById('wo_serviceAddress')?.value || '',
+        'Responsable_Atencion': document.getElementById('wo_contactName')?.value || '',
+        'Telefono': document.getElementById('wo_phone')?.value || '',
+        'Email': document.getElementById('wo_email')?.value || '',
+        'Destinatario_Informe': document.getElementById('wo_reportTo')?.value || '',
+        'Puesto_Destinatario': document.getElementById('wo_reportPosition')?.value || '',
+        'Observaciones_Generales': document.getElementById('wo_generalObservations')?.value || '',
+        'Realizo': document.getElementById('wo_preparedBy')?.value || '',
+        'Autorizo': document.getElementById('wo_authorizedBy')?.value || ''
+      };
+      
+      const items = [];
+      const workRows = document.querySelectorAll('#workTableBody tr');
+      workRows.forEach((row, i) => {
+        const fields = row.querySelectorAll('input, select, textarea');
+        if (fields.length >= 5 && fields[0].value) {
+          items.push({
+            'Item': i + 1,
+            'Norma': fields[0].value,
+            'Personal_Asignado': fields[1].value,
+            'Fecha': fields[2].value,
+            'Tipo_Mediciones': fields[3].value,
+            'Observaciones': fields[4].value
+          });
+        }
+      });
+      
+      const wb = XLSX.utils.book_new();
+      const wsG = XLSX.utils.json_to_sheet([data]);
+      XLSX.utils.book_append_sheet(wb, wsG, "Datos_Generales");
+      
+      if (items.length) {
+        const wsW = XLSX.utils.json_to_sheet(items);
+        XLSX.utils.book_append_sheet(wb, wsW, "Detalle_Trabajo");
+      }
+      
+      const fileName = `Orden_Trabajo_${orderNumber}_${new Date().toISOString().split('T')[0]}.xlsx`;
+      XLSX.writeFile(wb, fileName);
+      showStatus('workorderStatus', 'Orden de trabajo guardada', 'success');
+    } catch(err) {
+      console.error(err);
+      showStatus('workorderStatus', 'Error al guardar orden', 'error');
+    }
+  }
+
+  function printWorkOrder() {
+    const orderNumber = document.getElementById('wo_orderNumber')?.value || 'OT';
+    const client = document.getElementById('wo_clientName')?.value || 'Cliente';
+    document.title = `${orderNumber} - ${client}`;
+    
+    const controls = document.querySelectorAll('.excel-controls, .nav-tabs, .excel-mapping-info');
+    controls.forEach(e => e.style.display = 'none');
+    
+    // Ocultar otras pestañas
+    document.getElementById('profileTab').style.display = 'none';
+    document.getElementById('textTab').style.display = 'none';
+    document.getElementById('documentsTab').style.display = 'none';
+    document.getElementById('workorderTab').style.display = 'block';
+    
+    window.print();
+    
+    setTimeout(() => {
+      controls.forEach(e => e.style.display = '');
+      document.getElementById('profileTab').style.display = '';
+      document.getElementById('textTab').style.display = '';
+      document.getElementById('documentsTab').style.display = '';
+      switchTab('workorder');
+      document.title = 'SEA - Perfil de Datos & Orden de Trabajo';
+    }, 1000);
+  }
+
+  function sendWorkOrder() {
+    const email = document.getElementById('wo_email')?.value;
+    const orderNumber = document.getElementById('wo_orderNumber')?.value || 'Nueva';
+    
+    if (!email) {
+      showStatus('workorderStatus', 'No hay email de cliente disponible', 'warning');
+      return;
+    }
+    
+    const cc = 'eduwin.ejecutiva@gmail.com';
+    const branch = profileData.branch || 'No especificada';
+    const installed = profileData.installedCapacity || 'No especificada';
+    const operation = profileData.operationCapacity || 'No especificada';
+    const patronal = profileData.patronalRegistry || 'No especificado';
+    const giro = profileData.businessType || 'No especificado';
+    const company = profileData.companyName || 'Cliente';
+    const address = profileData.evaluationAddress || '';
+    const maps = address ? `https://maps.google.com/maps?q=${encodeURIComponent(address.trim())}` : 'Dirección no disponible';
+    
+    const subject = `Orden de Trabajo ${orderNumber} - ${company} - Ejecutiva Ambiental`;
+    const body = `Estimado,
+
+Adjunto encontrará la Orden de Trabajo ${orderNumber} para los servicios programados.
+
+🏢 Razón Social: ${company}
+• Sucursal: ${branch}
+• Giro/Actividad: ${giro}
+• Registro Patronal: ${patronal}
+
+⚙️ Capacidad Instalada: ${installed}
+⚙ Capacidad de Operación: ${operation}
+
+📍 Dirección: ${address}
+🔗 Google Maps: ${maps}
+
+Saludos cordiales,
+Ejecutiva Ambiental
+Tel: 222-941-7295`;
+
+    window.location.href = `mailto:${email}?cc=${cc}&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    showStatus('workorderStatus', `Email preparado con copia a ${cc}`, 'success');
+  }
+
+  // Funciones de generador de textos
+  function generateTextFromProfile() {
+    if (selectedTextTemplate) {
+      selectTextTemplate(selectedTextTemplate);
+    } else {
+      selectTextTemplate('email_profile', document.querySelector('.template-card'));
+    }
+    showStatus('textStatus', 'Texto auto-completado desde el perfil', 'success');
+  }
+
+  function selectTextTemplate(type, el) {
+    selectedTextTemplate = type;
+    document.querySelectorAll('.template-card').forEach(n => n.classList.remove('selected'));
+    if (el) el.classList.add('selected');
+    
+    const company = profileData.companyName || 'Cliente';
+    const order = document.getElementById('wo_orderNumber')?.value || 'Nueva';
+    const branch = profileData.branch || 'No especificada';
+    const address = profileData.evaluationAddress || '';
+    const maps = address ? `https://maps.google.com/maps?q=${encodeURIComponent(address.trim())}` : 'Dirección no disponible';
+    const contact = profileData.contactPerson || '';
+    const phone = profileData.contactPhone || '';
+    const email = profileData.reportEmail || '';
+    const currentDate = new Date().toLocaleDateString('es-MX');
+    
+    let text = '';
+
+    switch (type) {
+      case 'email_profile':
+        text = `Para: ${email}
+CC: eduwin.ejecutiva@gmail.com
+Asunto: Solicitud de Perfil de Datos - ${company} - Ejecutiva Ambiental
+
+Estimado cliente,
+
+Esperamos que se encuentre bien.
+
+Para brindarle el mejor servicio, necesitamos completar su perfil de datos empresariales.
+
+Por favor, complete la siguiente información:
+
+📋 DATOS REQUERIDOS:
+• Nombre y puesto del solicitante
+• Denominación/Razón Social completa
+• RFC de la empresa
+• Dirección donde se realizará la evaluación
+• Contacto responsable y teléfono
+• Giro comercial y actividad principal
+• Registro patronal
+• Horarios y turnos de trabajo
+
+📧 RESPUESTA:
+Favor de enviar la información completa a este correo.
+
+Si tiene alguna duda, no dude en contactarnos al 222-941-7295.
+
+Quedamos atentos a su respuesta.
+
+Saludos cordiales,
+EJECUTIVA AMBIENTAL
+Tel: 222-941-7295
+Email: eduwin.ejecutiva@gmail.com`;
+        break;
+
+      case 'email_workorder':
+        text = `Para: ${email}
+CC: eduwin.ejecutiva@gmail.com
+Asunto: Orden de Trabajo ${order} - ${company} - Ejecutiva Ambiental
+
+Estimado cliente,
+
+Adjunto encontrará la Orden de Trabajo ${order} para los servicios programados.
+
+🏢 DETALLES DEL SERVICIO:
+• Empresa: ${company}
+• Sucursal: ${branch}
+• Orden: ${order}
+• Fecha de emisión: ${currentDate}
+
+📍 DIRECCIÓN DEL SERVICIO:
+${address}
+🗺️ Google Maps: ${maps}
+
+📞 COORDINACIÓN:
+Para coordinar fechas y horarios de visita, favor de contactarnos:
+• Tel: 222-941-7295
+• Email: eduwin.ejecutiva@gmail.com
+
+📋 DOCUMENTACIÓN:
+Revise los servicios detallados en la orden adjunta y confirme:
+• Fechas disponibles para la visita
+• Horarios de acceso preferidos
+• Contacto responsable el día del servicio
+
+Quedamos pendientes de su confirmación.
+
+Saludos cordiales,
+EJECUTIVA AMBIENTAL
+Seguridad e Higiene | Capacitación | Mantenimiento Industrial`;
+        break;
+
+      case 'email_followup':
+        text = `Para: ${email}
+CC: eduwin.ejecutiva@gmail.com
+Asunto: Seguimiento de Servicio - ${company} - Ejecutiva Ambiental
+
+Estimado cliente,
+
+Esperamos que esté bien.
+
+Damos seguimiento a los servicios programados para su empresa.
+
+📋 RECORDATORIO:
+• Servicios pendientes de coordinar
+• Documentación en proceso
+• Próxima visita programada
+
+📞 CONTACTO:
+Para cualquier duda o reprogramación:
+Tel: 222-941-7295
+Email: eduwin.ejecutiva@gmail.com
+
+Quedamos atentos.
+
+Saludos cordiales,
+EJECUTIVA AMBIENTAL`;
+        break;
+
+      case 'email_quote':
+        text = `Para: ${email}
+CC: eduwin.ejecutiva@gmail.com
+Asunto: Cotización de Servicios - ${company} - Ejecutiva Ambiental
+
+Estimado cliente,
+
+Adjunto encontrará la cotización solicitada para los servicios de seguridad e higiene.
+
+💰 PROPUESTA ECONÓMICA:
+• Empresa: ${company}
+• Sucursal: ${branch}
+• Fecha: ${currentDate}
+
+📋 SERVICIOS INCLUIDOS:
+• Evaluaciones de seguridad e higiene
+• Documentación técnica completa
+• Certificados oficiales
+• Seguimiento y asesoría
+
+⏰ VIGENCIA:
+Esta cotización tiene vigencia de 30 días naturales.
+
+📞 PARA CONTRATAR:
+Tel: 222-941-7295
+Email: eduwin.ejecutiva@gmail.com
+
+Quedamos a sus órdenes para cualquier aclaración.
+
+Saludos cordiales,
+EJECUTIVA AMBIENTAL`;
+        break;
+
+      case 'email_results':
+        text = `Para: ${email}
+CC: eduwin.ejecutiva@gmail.com
+Asunto: Entrega de Resultados - ${company} - Ejecutiva Ambiental
+
+Estimado cliente,
+
+Nos complace entregar los resultados de las evaluaciones realizadas en su empresa.
+
+📊 INFORME TÉCNICO:
+• Empresa: ${company}
+• Servicios realizados según orden ${order}
+• Fecha de evaluación completada
+
+📋 DOCUMENTOS ENTREGADOS:
+• Informe técnico completo
+• Certificados oficiales
+• Recomendaciones técnicas
+• Anexos fotográficos
+
+✅ CUMPLIMIENTO:
+Los servicios se realizaron conforme a las normas oficiales mexicanas aplicables.
+
+📞 ACLARACIONES:
+Para cualquier duda sobre los resultados:
+Tel: 222-941-7295
+Email: eduwin.ejecutiva@gmail.com
+
+Agradecemos su confianza.
+
+Saludos cordiales,
+EJECUTIVA AMBIENTAL`;
+        break;
+
+      case 'receipt':
+        text = `ASUNTO: RECEPCIÓN DE PAGO
+
+RECIBO DE PAGO
+
+Lugar y fecha: Puebla, Pue., a ${currentDate}
+
+A QUIEN CORRESPONDA:
+
+Por medio del presente documento, se deja constancia de que SOLUCIÓN EN INGENIERÍA EJECUTIVA AMBIENTAL S.A. DE C.V., con domicilio en CHIPILO 714, COLONIA LA PAZ, PUEBLA, Pue., ha recibido a entera satisfacción el pago por parte de:
+
+Nombre o Razón Social del Cliente: ${company}
+Cotización del servicio: ABIERTO
+Factura relacionada: NO APLICA. 
+Monto recibido: ABIERTO
+Cantidad en número y letra: ABIERTO 
+Forma de pago: Efectivo 
+Fecha del pago: ${currentDate}
+
+Este recibo no sustituye el Comprobante Fiscal Digital por Internet (CFDI).`;
+        break;
+
+      case 'status_letter':
+        text = `A QUIEN CORRESPONDA,
+
+Por medio de la presente hago de su conocimiento que la empresa con razón social ${company}, para lo que a sus procesos de inspección, auditoría o revisiones convengan al cliente, ubicada en ${address}, ha contratado a nuestra Unidad de Inspección para llevar a cabo la Evaluación de la conformidad aplicando los lineamientos establecidos en la Norma Oficial Mexicana NOM-XXX-STPS-XXXX
+
+El día ${currentDate} se llevaron a cabo las siguientes actividades:
+
+OPCIÓN 1:
+a) Inspección de condiciones físicas de seguridad
+b) Revisión de cada uno de los Documentos requeridos por la normativa
+c) Levantamiento mecánico del equipo para elaborar complementos para el expediente técnico
+d) Revisión de Certificados de Fabricación
+e) Entrevistas
+
+Toda la información recabada en campo se utilizará para elaborar los documentos establecidos en la normativa y una vez cumplidos todos los requisitos de la normativa se procederá a emitir el dictamen correspondiente.
+
+Hago de su conocimiento que SOLUCIÓN EN INGENIERÍA EJECUTIVA AMBIENTAL, S.A. de C.V., a través de nuestra unidad TESTEN SERVICIOS INDUSTRIALES S.A. DE C.V. se encuentra acreditado en Materia de Seguridad e Higiene, específicamente en la NOM-020-STPS-2011, por la Entidad Mexicana de acreditación (EMA) y aprobado por la secretaría del Trabajo y Previsión Social (STPS) como Unidad de Inspección (Verificación) tipo "C" No. UVSTPS180
+
+-----
+
+OPCIÓN 2:
+a) Reconocimiento
+b) Evaluación
+c) Recabado de datos en general
+
+Toda la información recabada en campo se utilizará para elaborar los documentos establecidos en la normativa y una vez cumplidos todos los requisitos de la normativa se procederá a emitir el informe correspondiente.`;
+        break;
+
+      case 'memo':
+        text = `EJECUTIVA AMBIENTAL
+SEGURIDAD E HIGIENE, CAPACITACIÓN, MANTENIMIENTO INDUSTRIAL
+
+═══════════════════════════════════════
+                MEMORÁNDUM
+═══════════════════════════════════════
+
+MEMO No: EA-${new Date().getFullYear()}-${String(Date.now()).slice(-3)}
+FECHA: ${currentDate}
+
+PARA:    TODO EL PERSONAL
+DE:      DIRECCIÓN GENERAL
+ASUNTO:  [ESPECIFICAR ASUNTO]
+
+Por medio del presente, se comunica lo siguiente:
+
+ANTECEDENTES:
+_________________________________
+_________________________________
+
+DISPOSICIONES:
+1. _________________________________
+2. _________________________________
+3. _________________________________
+
+RESPONSABLES:
+• _________________________________
+• _________________________________
+
+FECHA LÍMITE: _______________
+
+OBSERVACIONES:
+_________________________________
+_________________________________
+
+Este memorándum entra en vigor a partir de su publicación y deberá ser cumplido por todo el personal.
+
+ATENTAMENTE
+
+___________________________
+ING. EDUWIN IVÁN HERNÁNDEZ ZÁRATE
+DIRECTOR GENERAL`;
+        break;
+
+      case 'invoice':
+        text = `No. de Documento: EA-${new Date().getFullYear()}-${String(Date.now()).slice(-4)}
+Fecha: ${currentDate}
+
+CLIENTE: ${company}
+RFC: ${profileData.rfc || '[RFC CLIENTE]'}
+Dirección: ${address}
+Contacto: ${contact}
+Teléfono: ${phone}
+
+Derivado de su solicitud, le compartimos nuestros datos bancarios:
+
+🏷️ Razón Social: SOLUCIÓN EN INGENIERÍA EJECUTIVA AMBIENTAL S.A. DE C.V.
+Banco: BBVA
+📑 RFC: SIE240503N89
+🔗 CLABE: 012650001233239784
+
+🔗 Consulte el PDF aquí: https://n9.cl/ejecutivabancarios
+
+Agradeceremos incluir el número de cotización o de factura en el motivo de su transferencia.
+
+Quedamos a sus órdenes para cualquier duda o aclaración.`;
+        break;
+    }
+
+    const output = document.getElementById('textOutput');
+    if (output) {
+      output.textContent = text;
+    }
+  }
+
+  function copyTextToClipboard() {
+    const output = document.getElementById('textOutput');
+    if (output && output.textContent) {
+      copyToClipboard(output.textContent);
+      showStatus('textStatus', 'Texto copiado al portapapeles', 'success');
+    } else {
+      showStatus('textStatus', 'No hay texto para copiar', 'warning');
+    }
+  }
+
+  // Funciones de documentos PDF
+  function generateDocumentData() {
+    // Auto-completar datos comunes para documentos
+    const companyInput = document.getElementById('stps_companyName');
+    const addressInput = document.getElementById('stps_address');
+    const phoneInput = document.getElementById('stps_phone');
+    const emailInput = document.getElementById('stps_email');
+    
+    if (companyInput) companyInput.value = profileData.companyName || '';
+    if (addressInput) addressInput.value = profileData.evaluationAddress || '';
+    if (phoneInput) phoneInput.value = profileData.requestorPhone || '';
+    if (emailInput) emailInput.value = profileData.reportEmail || '';
+    
+    showStatus('documentsStatus', 'Datos auto-completados desde el perfil', 'success');
+  }
+
+  // Funciones STPS (mantener las existentes)
+  function composeAuthorizedList() {
+    const checks = [...document.querySelectorAll('.authCheck')]
+      .filter(c => c.checked)
+      .map(c => c.value);
+    
+    const other = document.getElementById('stps_otherName')?.value.trim();
+    if (other) checks.push(other);
+    
+    const list = checks.join(', ');
+    const ta = document.getElementById('stps_authorizedPersons');
+    if (ta && !ta.value.trim()) {
+      ta.value = list;
+    }
+  }
+
+  function generateSTPS() {
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('es-MX', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
+    });
+    
+    // Completar datos desde perfil
+    const fields = [
+      { from: 'companyName', to: 'stps_companyName' },
+      { from: 'evaluationAddress', to: 'stps_address' },
+      { from: 'requestorPhone', to: 'stps_phone' },
+      { from: 'reportEmail', to: 'stps_email' }
+    ];
+    
+    fields.forEach(field => {
+      const el = document.getElementById(field.to);
+      if (el) {
+        el.value = profileData[field.from] || '';
+      }
+    });
+    
+    composeAuthorizedList();
+    showStatus('documentsStatus', 'Carta Poder STPS auto-completada', 'success');
+  }
+
+  async function downloadSTPS() {
+    try {
+      const { jsPDF } = window.jspdf;
+      
+      const currentDate = new Date();
+      const dateString = currentDate.toLocaleDateString('es-MX', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+      });
+      const year = currentDate.getFullYear();
+      
+      const authorizedPersons = document.getElementById('stps_authorizedPersons')?.value || '[PERSONA(S) AUTORIZADA(S)]';
+      const witness1 = document.getElementById('stps_witness1')?.value || '[TESTIGO 1]';
+      const witness2 = document.getElementById('stps_witness2')?.value || '[TESTIGO 2]';
+      
+      const companyName = profileData.companyName || '[RAZÓN SOCIAL]';
+      const address = profileData.evaluationAddress || '[DIRECCIÓN]';
+      const phone = profileData.requestorPhone || '[TELÉFONO]';
+      const email = profileData.reportEmail || '[CORREO]';
+      const legalRep = profileData.legalRep || '[REPRESENTANTE LEGAL]';
+      
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      
+      // Configurar fuente y márgenes
+      const margin = 20;
+      let yPosition = margin;
+      const lineHeight = 5;
+      const pageWidth = pdf.internal.pageSize.width;
+      const maxWidth = pageWidth - (margin * 2);
+      
+      function addCenteredText(text, fontSize = 11, isBold = false) {
+        if (isBold) pdf.setFont('helvetica', 'bold');
+        else pdf.setFont('helvetica', 'normal');
+        pdf.setFontSize(fontSize);
+        
+        const textWidth = pdf.getTextWidth(text);
+        const xPosition = (pageWidth - textWidth) / 2;
+        pdf.text(text, xPosition, yPosition);
+        yPosition += lineHeight;
+      }
+      
+      function addText(text, fontSize = 10, isBold = false, indent = 0) {
+        if (isBold) pdf.setFont('helvetica', 'bold');
+        else pdf.setFont('helvetica', 'normal');
+        pdf.setFontSize(fontSize);
+        
+        const splitText = pdf.splitTextToSize(text, maxWidth - indent);
+        pdf.text(splitText, margin + indent, yPosition);
+        yPosition += (splitText.length * lineHeight);
+      }
+      
+      function addSpace(lines = 1) {
+        yPosition += (lines * lineHeight);
+      }
+      
+      // Contenido del PDF
+      addCenteredText('SECRETARÍA DEL TRABAJO Y PREVISIÓN SOCIAL', 9, true);
+      addCenteredText('OFICINA DE REPRESENTACIÓN FEDERAL DEL TRABAJO EN EL ESTADO DE PUEBLA', 8, true);
+      addCenteredText('EDIFICIO SELAFE, AV. 31 PONIENTE NO. 2904, P.B., COL. EL VERGEL, C.P. 72400, PUEBLA, PUEBLA', 7, true);
+      
+      addSpace(2);
+      
+      // Fecha
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(9);
+      const dateText = `Puebla, Puebla, a ${dateString}`;
+      const dateWidth = pdf.getTextWidth(dateText);
+      pdf.text(dateText, pageWidth - margin - dateWidth, yPosition);
+      yPosition += lineHeight * 2;
+      
+      addText('Por este conducto y con fundamento en el Artículo 19 de la Ley Federal de Procedimiento Administrativo, autorizo mediante el presente escrito a:', 9);
+      addSpace(0.5);
+      
+      addText(authorizedPersons, 9, true);
+      addSpace(0.5);
+      
+      addText('Para que conjunta o indistintamente puedan:', 9);
+      
+      addText('• Oír y recibir notificaciones', 9, false, 5);
+      addText('• Realizar trámites, gestiones y comparecencias necesarias', 9, false, 5);
+      const procedureText = '• Promover ante la Secretaría del Trabajo y Previsión Social los procedimientos administrativos correspondientes, incluyendo ingreso o recepción de oficios de registro, inspección, autorizaciones, continuidad de vigencias, aclaraciones, emplazamientos, recursos y cualquier asunto relativo a los recipientes sujetos a presión instalados en nuestra empresa';
+      const splitProcedure = pdf.splitTextToSize(procedureText, maxWidth - 5);
+      pdf.text(splitProcedure, margin + 5, yPosition);
+      yPosition += (splitProcedure.length * lineHeight);
+      
+      addSpace(0.5);
+      
+      addText('DATOS DEL CENTRO DE TRABAJO:', 9, true);
+      
+      addText(`Nombre/Razón Social: ${companyName}`, 9, false, 5);
+      const addressLines = pdf.splitTextToSize(`Domicilio: ${address}`, maxWidth - 5);
+      pdf.text(addressLines, margin + 5, yPosition);
+      yPosition += (addressLines.length * lineHeight);
+      addText(`Teléfono: ${phone}`, 9, false, 5);
+      addText(`Correo electrónico: ${email}`, 9, false, 5);
+      
+      addSpace(0.5);
+      
+      addText('DOCUMENTOS QUE SE ANEXAN:', 9, true);
+      addText('• Copia simple de identificación oficial del Representante Legal', 9, false, 5);
+      addText('• Copia simple de identificación oficial de la(s) persona(s) autorizada(s)', 9, false, 5);
+      addText('• Copia simple de identificación oficial de los testigos', 9, false, 5);
+      
+      addSpace(0.5);
+      
+      addText('Este documento se expide únicamente para los fines señalados y dirigido exclusivamente a la dependencia mencionada.', 9);
+      addSpace(0.5);
+      
+      addText(`VIGENCIA: Del ${dateString} al 31 de diciembre de ${year}`, 9, true);
+      addSpace(0.5);
+      
+      addText('Agradeciendo la atención prestada, quedo de ustedes.', 9);
+      addSpace(2);
+      
+      addCenteredText('ATENTAMENTE', 9, true);
+      addSpace(3);
+      
+      // Línea para firma
+      const signatureLineWidth = 100;
+      const signatureX = (pageWidth - signatureLineWidth) / 2;
+      pdf.line(signatureX, yPosition, signatureX + signatureLineWidth, yPosition);
+      yPosition += lineHeight;
+      
+      addCenteredText(legalRep, 9, true);
+      addCenteredText('Representante Legal del Centro de Trabajo', 8);
+      
+      addSpace(2);
+      
+      // Testigos
+      addCenteredText('TESTIGOS:', 9, true);
+      addSpace(1);
+      
+      const witnessY = yPosition;
+      const leftWitnessX = margin + 25;
+      const rightWitnessX = pageWidth - margin - 75;
+      
+      pdf.line(leftWitnessX, witnessY, leftWitnessX + 50, witnessY);
+      pdf.line(rightWitnessX, witnessY, rightWitnessX + 50, witnessY);
+      
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(8);
+      
+      const witness1Text = witness1.length > 25 ? witness1.substring(0, 22) + '...' : witness1;
+      const witness2Text = witness2.length > 25 ? witness2.substring(0, 22) + '...' : witness2;
+      
+      const witness1Width = pdf.getTextWidth(witness1Text);
+      const witness2Width = pdf.getTextWidth(witness2Text);
+      
+      pdf.text(witness1Text, leftWitnessX + (50 - witness1Width) / 2, witnessY + 5);
+      pdf.text(witness2Text, rightWitnessX + (50 - witness2Width) / 2, witnessY + 5);
+      
+      const safeCompanyName = companyName.replace(/[^a-zA-Z0-9]/g, '_');
+      const fileName = `Carta_Poder_STPS_${safeCompanyName}_${currentDate.toISOString().split('T')[0]}.pdf`;
+      
+      pdf.save(fileName);
+      showStatus('documentsStatus', 'PDF descargado correctamente', 'success');
+    } catch (error) {
+      console.error('Error al generar PDF:', error);
+      showStatus('documentsStatus', 'Error al generar PDF', 'error');
+    }
+  }
+
+  // Funciones de otros documentos (placeholder para futuro desarrollo)
+  function generateServiceLetter() {
+    showStatus('documentsStatus', 'Función en desarrollo', 'warning');
+  }
+
+  function downloadServiceLetter() {
+    showStatus('documentsStatus', 'Función en desarrollo', 'warning');
+  }
+
+  function generateComplianceLetter() {
+    showStatus('documentsStatus', 'Función en desarrollo', 'warning');
+  }
+
+  function downloadComplianceLetter() {
+    showStatus('documentsStatus', 'Función en desarrollo', 'warning');
+  }
+
+  function generateMeetingAct() {
+    showStatus('documentsStatus', 'Función en desarrollo', 'warning');
+  }
+
+  function downloadMeetingAct() {
+    showStatus('documentsStatus', 'Función en desarrollo', 'warning');
+  }
+
+  // Event listeners y inicialización
+  document.addEventListener('DOMContentLoaded', () => {
+    // Configurar file input
+    const fileInput = document.getElementById('profileFile');
+    const fileNameSpan = document.getElementById('fileSelectedName');
+    
+    if (fileInput && fileNameSpan) {
+      fileInput.addEventListener('change', function() {
+        if (this.files && this.files[0]) {
+          fileNameSpan.textContent = `Archivo: ${this.files[0].name}`;
+          fileNameSpan.style.color = '#28a745';
+          fileNameSpan.style.fontWeight = 'bold';
+        } else {
+          fileNameSpan.textContent = 'No se ha seleccionado ningún archivo.';
+          fileNameSpan.style.color = '#666';
+          fileNameSpan.style.fontWeight = 'normal';
+        }
+      });
+    }
+    
+    // Establecer fecha actual en orden de trabajo
+    const issueDateInput = document.getElementById('wo_issueDate');
+    if (issueDateInput) {
+      issueDateInput.value = new Date().toISOString().split('T')[0];
+    }
+    
+    // Listeners para STPS
+    document.querySelectorAll('.authCheck').forEach(checkbox => {
+      checkbox.addEventListener('change', composeAuthorizedList);
+    });
+    
+    const stpsOtherInput = document.getElementById('stps_otherName');
+    if (stpsOtherInput) {
+      stpsOtherInput.addEventListener('input', composeAuthorizedList);
+    }
+    
+    // Sincronizar datos cuando se cambie de pestaña
+    document.querySelectorAll('.nav-tab').forEach(tab => {
+      tab.addEventListener('click', syncData);
+    });
+    
+    console.log('✅ Sistema Ejecutiva Ambiental cargado correctamente');
+  });
+
+  // Exponer funciones globalmente para onclick handlers
+  window.switchTab = switchTab;
+  window.loadProfile = loadProfile;
+  window.saveProfile = saveProfile;
+  window.downloadProfileTemplate = downloadProfileTemplate;
+  window.exportToExcelFormat = exportToExcelFormat;
+  window.sendToClient = sendToClient;
+  window.generateWorkOrder = generateWorkOrder;
+  window.addWorkRow = addWorkRow;
+  window.removeRow = removeRow;
+  window.saveWorkOrder = saveWorkOrder;
+  window.printWorkOrder = printWorkOrder;
+  window.sendWorkOrder = sendWorkOrder;
+  window.generateTextFromProfile = generateTextFromProfile;
+  window.selectTextTemplate = selectTextTemplate;
+  window.copyTextToClipboard = copyTextToClipboard;
+  window.generateDocumentData = generateDocumentData;
+  window.generateSTPS = generateSTPS;
+  window.downloadSTPS = downloadSTPS;
+  window.generateServiceLetter = generateServiceLetter;
+  window.downloadServiceLetter = downloadServiceLetter;
+  window.generateComplianceLetter = generateComplianceLetter;
+  window.downloadComplianceLetter = downloadComplianceLetter;
+  window.generateMeetingAct = generateMeetingAct;
+  window.downloadMeetingAct = downloadMeetingAct;
+  window.syncData = syncData;
+</script>
+
+</body>
+</html>
+      
