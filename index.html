@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Sistema Ejecutiva Ambiental - Perfil de Datos & Orden de Trabajo</title>
 
-  <!-- ========= ESTILOS ========= -->
   <style>
     *{box-sizing:border-box}
 
@@ -75,14 +74,6 @@
     .excel-mapping-info{background:#e3f2fd;border:1px solid #1976d2;border-radius:4px;padding:10px;margin:10px 0;font-size:10px}
     .excel-mapping-info strong{color:#1976d2}
 
-    /* Impresión */
-    @media print{
-      .nav-tabs,.excel-controls,.excel-mapping-info{display:none}
-      body{background:#fff;padding:0;font-size:11px}
-      .main-container{margin:0;max-width:none;padding:0}
-      @page{size:A4;margin:10mm}
-    }
-
     /* Estilos para generadores de texto */
     .template-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:15px;margin:15px 0}
     .template-card{border:1px solid #e3e3e3;border-radius:8px;padding:15px;cursor:pointer;background:#fff;transition:.3s;position:relative}
@@ -103,11 +94,38 @@
     .pdf-btn{background:#dc3545;color:#fff;border:0;padding:6px 12px;border-radius:4px;cursor:pointer;font-size:10px}
     .pdf-btn:hover{background:#c82333}
 
+    /* ==== ADICIONES OPERATIVAS (NO CAMBIAN PDF) ==== */
+    .no-print{ /* se oculta en impresión */ }
+
+    .radio-group{display:flex;gap:20px;align-items:center;margin-top:5px;}
+    .radio-group label{font-weight:normal;text-transform:none;display:flex;align-items:center;gap:5px;cursor:pointer;}
+    .radio-group input[type="radio"]{cursor:pointer;}
+    .series-info{background:#fff3cd;border:1px solid #ffc107;border-radius:4px;padding:8px;margin:8px 0;font-size:10px;color:#856404;}
+
+    .service-autocomplete{position:relative;}
+    .service-suggestions{
+      position:absolute;top:100%;left:0;right:0;
+      background:#fff;border:1px solid #1e5a3e;border-top:0;
+      max-height:200px;overflow-y:auto;z-index:1000;display:none;
+      box-shadow:0 4px 6px rgba(0,0,0,0.1);
+    }
+    .service-suggestions div{padding:6px 8px;cursor:pointer;font-size:10px;border-bottom:1px solid #eee;color:#333;}
+    .service-suggestions div:hover{background:#f0f0f0;}
+    .service-suggestions.show{display:block;}
+
+    /* ==== IMPRESIÓN: NO ALTERAR LAYOUT OT ==== */
     @media print{
-      #textTab,#documentsTab{display:none !important;}
+      .nav-tabs,.excel-controls,.excel-mapping-info,.no-print{display:none !important;}
+      .service-suggestions{display:none !important;} /* evita que se cuele el dropdown */
+      body{background:#fff;padding:0;font-size:11px}
+      .main-container{margin:0;max-width:none;padding:0}
+      @page{size:A4;margin:10mm}
+
+      /* Solo OT */
+      #profileTab,#textTab,#documentsTab{display:none !important;}
+      #workorderTab{display:block !important;}
     }
   </style>
-
 </head>
 
 <body>
@@ -203,6 +221,7 @@
     <div class="excel-controls">
       <strong>🔧 Gestión de Orden:</strong>
       <button onclick="generateWorkOrder()">Generar desde Perfil</button>
+      <button onclick="registerToSheets()" style="background:#007bff;">📊 Registrar en Sheets</button>
       <button onclick="saveWorkOrder()">Guardar Orden</button>
       <button onclick="printWorkOrder()">Imprimir/PDF</button>
       <button onclick="sendWorkOrder()">Enviar por Email</button>
@@ -227,7 +246,18 @@
       <div class="section-header">Información del Servicio</div>
       <div class="section-content">
         <div class="form-grid">
-          <div class="form-group"><label>N° de Orden de Servicio</label><input type="text" id="wo_orderNumber" placeholder="OT25-0123-XX"></div>
+
+          <!-- OPERATIVO: Serie OT/OTB (NO imprime) -->
+          <div class="form-group full-width no-print">
+            <label>Serie de Orden (Operativo)</label>
+            <div class="radio-group">
+              <label><input type="radio" name="orderSeries" value="OT" checked onchange="updateOrderNumber()"> Serie Normal (OT)</label>
+              <label><input type="radio" name="orderSeries" value="OTB" onchange="updateOrderNumber()"> Serie B (OTB)</label>
+            </div>
+            <div class="series-info" id="seriesInfo">Último: OT-000 | Siguiente sugerido: ...</div>
+          </div>
+
+          <div class="form-group"><label>N° de Orden de Servicio</label><input type="text" id="wo_orderNumber" placeholder="OT25-0106-001"></div>
           <div class="form-group"><label>Fecha de Emisión</label><input type="date" id="wo_issueDate"></div>
           <div class="form-group"><label>Referencia de Cotización</label><input type="text" id="wo_quoteRef"></div>
           <div class="form-group"><label><!-- vacio --></label><div></div></div>
@@ -262,6 +292,7 @@
         <table class="work-table" id="workTable">
           <thead>
           <tr>
+            <!-- ANCHOS ORIGINALES (inamovibles) -->
             <th style="width:15%">SERVICIO</th>
             <th style="width:15%">PERSONAL ASIGNADO</th>
             <th style="width:15%">FECHA</th>
@@ -272,13 +303,20 @@
           </thead>
           <tbody id="workTableBody">
           <tr>
-            <td><input type="text" placeholder="NOM-XXX-STPS"></td>
+            <td>
+              <!-- Autocomplete NO cambia impresión -->
+              <div class="service-autocomplete">
+                <input type="text" class="service-input" placeholder="NOM-XXX-STPS">
+                <div class="service-suggestions"></div>
+              </div>
+            </td>
             <td>
               <select>
                 <option value="">Seleccionar...</option>
                 <option>Martín Luna</option>
                 <option>Jimmy Ayala</option>
                 <option>Iván Zárate</option>
+                <option>Gonzalo Torres</option>
                 <option>Eduardo Campos</option>
                 <option>Adrián H</option>
                 <option>Externo</option>
@@ -300,6 +338,7 @@
       </div>
     </div>
 
+    <!-- FIRMAS + QR: BLOQUE ORIGINAL (inamovible) -->
     <div class="section">
       <div class="section-header">Autorización y Firmas</div>
       <div class="section-content">
@@ -322,6 +361,7 @@
         </div>
       </div>
     </div>
+
   </div>
 
   <!-- ================= TAB 3: GENERADOR DE TEXTOS ================= -->
@@ -370,7 +410,7 @@
             <p>Comunicación interna</p>
           </div>
           <div class="template-card" onclick="selectTextTemplate('invoice', this)">
-            <h4>📋 Datos bancarios </h4>
+            <h4>📋 Datos bancarios</h4>
             <p>Documento de facturación</p>
           </div>
         </div>
@@ -406,7 +446,7 @@
               <button class="pdf-btn" onclick="downloadSTPS()">Descargar PDF</button>
             </div>
           </div>
-          
+
           <div class="document-card">
             <h4>📋 Carta de Servicios</h4>
             <p>Documento que certifica los servicios realizados</p>
@@ -437,7 +477,7 @@
       </div>
     </div>
 
-    <!-- Carta Poder STPS (mantener la funcionalidad existente) -->
+    <!-- Carta Poder STPS -->
     <div class="section" id="stpsSection">
       <div class="section-header">Configuración - Carta Poder STPS</div>
       <div class="section-content">
@@ -451,7 +491,7 @@
             <input type="text" id="stps_officeLine3" value="EDIFICIO SELAFE, AV. 31 PONIENTE NO. 2904, P.B., COL. EL VERGEL, C.P. 72400, PUEBLA, PUEBLA">
           </div>
         </div>
-        
+
         <div class="form-grid">
           <div class="form-group full-width">
             <label>Selecciona una o varias personas autorizadas</label>
@@ -465,7 +505,7 @@
               <label>Otro (editable):</label>
               <input type="text" id="stps_otherName" placeholder="Escribe otro nombre completo">
             </div>
-            
+
             <div class="form-group full-width">
               <label>Lista final (puedes editar manualmente)</label>
               <textarea id="stps_authorizedPersons" style="min-height:70px;" placeholder="Nombres completos separados por comas"></textarea>
@@ -479,8 +519,8 @@
         </div>
       </div>
     </div>
-  </div>
 
+  </div>
 </div>
 
 <!-- ========= LIBRERÍAS ========= -->
@@ -489,7 +529,20 @@
 
 <!-- ========= SCRIPT PRINCIPAL ========= -->
 <script>
-  // Variables globales
+  // ================== CONFIG GOOGLE SHEETS (OPERATIVO) ==================
+  const SHEETS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyxH_KvTpiq1gmHOy4msfyNbC0OPJ2m4-grPQ5zdpRMRE3kSIbaZs30tHYfdhE83EwnbQ/exec';
+  const SPREADSHEET_ID = '1pWIzrtLAh_YHow1LH55tIfgsCUoct-64JjPaBk5u10U';
+  const SHEET_NAME = 'PANEL2.0';
+  const START_ROW = 93;
+
+  const PREDEFINED_SERVICES = [
+    'NOM-001-STPS','NOM-002-STPS','NOM-004-STPS','NOM-006-STPS','NOM-011-STPS',
+    'NOM-015-STPS','NOM-017-STPS','NOM-019-STPS','NOM-022-STPS','NOM-024-STPS',
+    'NOM-025-STPS','NOM-026-STPS','NOM-030-STPS','NOM-081-SEMARNAT','PROTECCIÓN CIVIL',
+    'CAPACITACIÓN','DICTAMEN ESTRUCTURAL','ESTUDIO DE RIESGO','PLAN DE EMERGENCIA','PROGRAMA INTERNO'
+  ];
+
+  // ================== VARIABLES GLOBALES ==================
   let profileData = {};
   let workOrderData = {};
   let selectedTextTemplate = null;
@@ -501,7 +554,7 @@
     'workSchedule':'D23','reportRecipientName':'D26','reportEmail':'D30','reportRecipientPosition':'D28'
   };
 
-  // Funciones de utilidad
+  // ================== UTILIDADES ==================
   function getCellValue(ws, cellRef) {
     try {
       const c = ws[cellRef];
@@ -524,11 +577,8 @@
   function showStatus(elementId, message, type = 'success') {
     const element = document.getElementById(elementId);
     if (!element) return;
-    
     element.innerHTML = `<span class="status-message status-${type}">${message}</span>`;
-    setTimeout(() => {
-      element.innerHTML = '';
-    }, 3000);
+    setTimeout(() => { element.innerHTML = ''; }, 3000);
   }
 
   function showSyncIndicator() {
@@ -541,52 +591,42 @@
 
   function copyToClipboard(text) {
     if (navigator.clipboard) {
-      navigator.clipboard.writeText(text).then(() => {
-        console.log('Texto copiado al portapapeles');
-      }).catch(err => {
-        console.error('Error al copiar:', err);
-      });
+      navigator.clipboard.writeText(text).catch(()=>{});
     } else {
-      // Fallback para navegadores más antiguos
-      const textArea = document.createElement('textarea');
-      textArea.value = text;
-      document.body.appendChild(textArea);
-      textArea.select();
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
       document.execCommand('copy');
-      document.body.removeChild(textArea);
+      document.body.removeChild(ta);
     }
   }
 
-  // Función para cambiar pestañas
+  // ================== TABS ==================
   function switchTab(name) {
-    try { 
-      window.scrollTo({top: 0, behavior: 'smooth'}); 
-    } catch(e) { 
-      window.scrollTo(0, 0); 
-    }
-    
-    // Remover clases activas
+    try { window.scrollTo({top:0, behavior:'smooth'}); } catch(e) { window.scrollTo(0,0); }
     document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
     document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-    
-    // Activar pestaña correspondiente
+
     const tabMap = {
       'profile': { content: 'profileTab', button: 'profileTabButton' },
       'workorder': { content: 'workorderTab', button: 'workorderTabButton' },
       'text': { content: 'textTab', button: 'textTabButton' },
       'documents': { content: 'documentsTab', button: 'documentsTabButton' }
     };
-    
+
     if (tabMap[name]) {
       const contentEl = document.getElementById(tabMap[name].content);
       const buttonEl = document.getElementById(tabMap[name].button);
-      
       if (contentEl) contentEl.classList.add('active');
       if (buttonEl) buttonEl.classList.add('active');
     }
+
+    // siempre sincroniza al cambiar (no afecta impresión)
+    syncData();
   }
 
-  // Función principal de sincronización
+  // ================== SINCRONIZACIÓN PERFIL -> OT ==================
   function syncData() {
     const fields = [
       'requestorName','requestorPhone','companyName','rfc','branch','legalRep',
@@ -594,14 +634,12 @@
       'patronalRegistry','operationCapacity','installedCapacity','workSchedule',
       'reportRecipientName','reportRecipientPosition','reportEmail','processDescription'
     ];
-    
+
     fields.forEach(id => {
       const el = document.getElementById(id);
-      if (el) {
-        profileData[id] = (el.type === 'checkbox') ? el.checked : el.value;
-      }
+      if (el) profileData[id] = el.value;
     });
-    
+
     updateWorkOrderFromProfile();
     showSyncIndicator();
   }
@@ -613,40 +651,35 @@
       'evaluationAddress': 'wo_serviceAddress',
       'contactPerson': 'wo_contactName',
       'contactPhone': 'wo_phone',
+      'reportEmail': 'wo_email',
       'reportRecipientName': 'wo_reportTo',
       'reportRecipientPosition': 'wo_reportPosition'
     };
-    
+
     Object.keys(map).forEach(k => {
       const v = profileData[k] || '';
       const f = document.getElementById(map[k]);
-      if (f) {
-        f.value = v;
-      }
+      if (f) f.value = v;
     });
   }
 
-  // Funciones de perfil
+  // ================== PERFIL (EXCEL) ==================
   function loadProfile() {
     const input = document.getElementById('profileFile');
     const file = input?.files[0];
-    
-    if (!file) {
-      showStatus('profileStatus', 'Selecciona un archivo Excel', 'warning');
-      return;
-    }
-    
+    if (!file) { showStatus('profileStatus','Selecciona un archivo Excel','warning'); return; }
+
     const reader = new FileReader();
     reader.onload = e => {
       try {
         const data = new Uint8Array(e.target.result);
-        const wb = XLSX.read(data, {type: 'array'});
+        const wb = XLSX.read(data, {type:'array'});
         const ws = wb.Sheets[wb.SheetNames[0]];
         populateProfileFromExcel(ws);
-        showStatus('profileStatus', 'Perfil cargado exitosamente', 'success');
+        showStatus('profileStatus','Perfil cargado exitosamente','success');
       } catch(err) {
         console.error(err);
-        showStatus('profileStatus', 'Error al leer archivo Excel', 'error');
+        showStatus('profileStatus','Error al leer archivo Excel','error');
       }
     };
     reader.readAsArrayBuffer(file);
@@ -657,14 +690,7 @@
       const ref = excelCellMapping[id];
       const val = getCellValue(ws, ref);
       const el = document.getElementById(id);
-      
-      if (el && val) {
-        if (el.type === 'checkbox') {
-          el.checked = ['SI', 'YES', 'TRUE', '1', true].includes(String(val).toUpperCase());
-        } else {
-          el.value = String(val);
-        }
-      }
+      if (el && val !== '') el.value = String(val);
     });
     syncData();
   }
@@ -673,27 +699,23 @@
     try {
       const wb = XLSX.utils.book_new();
       const wsData = {};
-      
       Object.keys(excelCellMapping).forEach(id => {
         const el = document.getElementById(id);
         const ref = excelCellMapping[id];
-        if (el && el.value) {
-          setCellValue(wsData, ref, el.value);
-        }
+        if (el && el.value) setCellValue(wsData, ref, el.value);
       });
-      
+
       const ws = XLSX.utils.json_to_sheet([]);
       Object.keys(wsData).forEach(r => ws[r] = wsData[r]);
       XLSX.utils.book_append_sheet(wb, ws, "Perfil_Cliente");
-      
-      const name = profileData.companyName || 'Cliente';
-      const fileName = `Perfil_${name.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().split('T')[0]}.xlsx`;
+
+      const name = (profileData.companyName || 'Cliente').replace(/[^a-zA-Z0-9]/g, '_');
+      const fileName = `Perfil_${name}_${new Date().toISOString().split('T')[0]}.xlsx`;
       XLSX.writeFile(wb, fileName);
-      
-      showStatus('profileStatus', 'Perfil guardado correctamente', 'success');
+      showStatus('profileStatus','Perfil guardado correctamente','success');
     } catch(err) {
       console.error(err);
-      showStatus('profileStatus', 'Error al guardar perfil', 'error');
+      showStatus('profileStatus','Error al guardar perfil','error');
     }
   }
 
@@ -701,7 +723,6 @@
     try {
       const wb = XLSX.utils.book_new();
       const data = {};
-      
       const examples = {
         'D3': 'Juan Pérez - Gerente',
         'D5': 'Empresa Ejemplo S.A. de C.V.',
@@ -717,38 +738,30 @@
         'D21': '1000 u/día',
         'I21': '1500 u/día',
         'D23': 'L-V 7:00-15:00',
-        'D26': 'informes@empresa.com',
+        'D26': 'Ing. Carlos Ruiz',
         'D28': 'Director Técnico',
         'D30': 'gerencia@empresa.com'
       };
-      
       Object.keys(examples).forEach(r => setCellValue(data, r, examples[r]));
-      
+
       const ws = XLSX.utils.json_to_sheet([]);
       Object.keys(data).forEach(r => ws[r] = data[r]);
       XLSX.utils.book_append_sheet(wb, ws, "Plantilla");
-      
       XLSX.writeFile(wb, "Plantilla_Perfil_Cliente_EA.xlsx");
-      showStatus('profileStatus', 'Plantilla descargada correctamente', 'success');
+      showStatus('profileStatus','Plantilla descargada correctamente','success');
     } catch(err) {
       console.error(err);
-      showStatus('profileStatus', 'Error al generar plantilla', 'error');
+      showStatus('profileStatus','Error al generar plantilla','error');
     }
   }
 
-  function exportToExcelFormat() {
-    saveProfile();
-  }
+  function exportToExcelFormat() { saveProfile(); }
 
   function sendToClient() {
     const email = document.getElementById('reportEmail')?.value;
     const company = document.getElementById('companyName')?.value || 'Su Empresa';
-    
-    if (!email) {
-      showStatus('profileStatus', 'Ingresa un email de contacto primero', 'warning');
-      return;
-    }
-    
+    if (!email) { showStatus('profileStatus','Ingresa un email de contacto primero','warning'); return; }
+
     const subject = `Perfil de Datos - ${company} - Ejecutiva Ambiental`;
     const body = `Estimado cliente,
 
@@ -758,40 +771,103 @@ Saludos cordiales,
 Ejecutiva Ambiental`;
 
     window.location.href = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    showStatus('profileStatus', 'Cliente de email abierto', 'success');
+    showStatus('profileStatus','Cliente de email abierto','success');
   }
 
-  // Funciones de orden de trabajo
+  // ================== SERIES OT/OTB (OPERATIVO, NO PDF) ==================
+  function getSelectedSeries() {
+    const radio = document.querySelector('input[name="orderSeries"]:checked');
+    return radio ? radio.value : 'OT';
+  }
+  function getLastOrderNumber(series) {
+    return localStorage.getItem(`lastOrder_${series}`) || `${series}-000`;
+  }
+  function saveLastOrderNumber(series, orderNumber) {
+    localStorage.setItem(`lastOrder_${series}`, orderNumber);
+  }
+  function generateNextOrderNumber(series) {
+    const lastOrder = getLastOrderNumber(series);
+    const parts = lastOrder.split('-');
+    const lastNum = parseInt(parts[parts.length - 1], 10) || 0;
+    const nextNum = lastNum + 1;
+
+    const today = new Date();
+    const yy = String(today.getFullYear()).slice(-2);
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    return `${series}${yy}-${mm}${dd}-${String(nextNum).padStart(3, '0')}`;
+  }
+  function updateOrderNumber() {
+    const series = getSelectedSeries();
+    const lastOrder = getLastOrderNumber(series);
+    const nextOrder = generateNextOrderNumber(series);
+
+    const infoBox = document.getElementById('seriesInfo');
+    if (infoBox) infoBox.textContent = `Último: ${lastOrder} | Siguiente sugerido: ${nextOrder}`;
+
+    const orderInput = document.getElementById('wo_orderNumber');
+    if (orderInput) orderInput.value = nextOrder;
+  }
+
+  // ================== AUTOCOMPLETADO SERVICIOS ==================
+  function setupServiceAutocomplete(input) {
+    if (!input) return;
+    const container = input.closest('.service-autocomplete');
+    if (!container) return;
+
+    const suggestionsDiv = container.querySelector('.service-suggestions');
+    if (!suggestionsDiv) return;
+
+    input.addEventListener('input', function() {
+      const value = this.value.toUpperCase().trim();
+      if (value.length < 2) { suggestionsDiv.classList.remove('show'); return; }
+
+      const filtered = PREDEFINED_SERVICES.filter(s => s.toUpperCase().includes(value));
+      if (filtered.length) {
+        suggestionsDiv.innerHTML = filtered.map(s => `<div data-service="${s}">${s}</div>`).join('');
+        suggestionsDiv.classList.add('show');
+      } else {
+        suggestionsDiv.classList.remove('show');
+      }
+    });
+
+    suggestionsDiv.addEventListener('click', (e) => {
+      const item = e.target.closest('div[data-service]');
+      if (!item) return;
+      input.value = item.getAttribute('data-service') || '';
+      suggestionsDiv.classList.remove('show');
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!container.contains(e.target)) suggestionsDiv.classList.remove('show');
+    }, {capture:true});
+  }
+
+  // ================== OT ==================
   function generateWorkOrder() {
     const today = new Date();
     const dateInput = document.getElementById('wo_issueDate');
-    if (dateInput) {
-      dateInput.value = today.toISOString().split('T')[0];
-    }
-    
-    const orderInput = document.getElementById('wo_orderNumber');
-    if (orderInput) {
-      const orderNum = `OT${String(today.getFullYear() % 100).padStart(2, '0')}-${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}-`;
-      orderInput.value = orderNum;
-    }
-    
+    if (dateInput) dateInput.value = today.toISOString().split('T')[0];
+
+    // Folio por serie (operativo)
+    updateOrderNumber();
+
     syncData();
     generateQRCode();
-    showStatus('workorderStatus', 'Orden de trabajo generada automáticamente', 'success');
+    showStatus('workorderStatus','Orden de trabajo generada automáticamente','success');
   }
 
   function generateQRCode() {
     const cont = document.getElementById('qrCodeContainer');
     if (!cont) return;
-    
+
     cont.innerHTML = '';
-    
     const img = document.createElement('img');
     img.src = 'https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=tel:2229417295';
     img.alt = 'Llamar al 2229417295';
     img.style.cssText = 'width:80px;height:80px;border:1px solid #ccc;border-radius:4px;';
     cont.appendChild(img);
-    
+
     const txt = document.createElement('div');
     txt.textContent = 'Dudas: 2229417295';
     txt.style.cssText = 'font-size:8px;text-align:center;margin-top:2px;';
@@ -801,10 +877,15 @@ Ejecutiva Ambiental`;
   function addWorkRow() {
     const tbody = document.getElementById('workTableBody');
     if (!tbody) return;
-    
+
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td><input type="text" placeholder="NOM-XXX-STPS"></td>
+      <td>
+        <div class="service-autocomplete">
+          <input type="text" class="service-input" placeholder="NOM-XXX-STPS">
+          <div class="service-suggestions"></div>
+        </div>
+      </td>
       <td>
         <select>
           <option value="">Seleccionar...</option>
@@ -820,14 +901,15 @@ Ejecutiva Ambiental`;
       <td><input type="date"></td>
       <td><input type="text" placeholder="Ruido, Vibración, etc."></td>
       <td><textarea rows="2"></textarea></td>
-      <td style="text-align:center;"><button class="remove-row-btn" onclick="removeRow(this)">✖</button></td>`;
+      <td style="text-align:center;"><button class="remove-row-btn" onclick="removeRow(this)">✖</button></td>
+    `;
     tbody.appendChild(tr);
+
+    setupServiceAutocomplete(tr.querySelector('.service-input'));
   }
 
   function removeRow(btn) {
-    if (btn && btn.closest) {
-      btn.closest('tr').remove();
-    }
+    if (btn && btn.closest) btn.closest('tr').remove();
   }
 
   function saveWorkOrder() {
@@ -835,7 +917,11 @@ Ejecutiva Ambiental`;
       const orderNumber = document.getElementById('wo_orderNumber')?.value || 'Nueva';
       const issueDate = document.getElementById('wo_issueDate')?.value || '';
       const quoteRef = document.getElementById('wo_quoteRef')?.value || '';
-      
+
+      // Guardar último folio por serie (operativo)
+      saveLastOrderNumber(getSelectedSeries(), orderNumber);
+      updateOrderNumber();
+
       const data = {
         'Numero_Orden': orderNumber,
         'Fecha_Emision': issueDate,
@@ -852,7 +938,7 @@ Ejecutiva Ambiental`;
         'Realizo': document.getElementById('wo_preparedBy')?.value || '',
         'Autorizo': document.getElementById('wo_authorizedBy')?.value || ''
       };
-      
+
       const items = [];
       const workRows = document.querySelectorAll('#workTableBody tr');
       workRows.forEach((row, i) => {
@@ -863,65 +949,67 @@ Ejecutiva Ambiental`;
             'Norma': fields[0].value,
             'Personal_Asignado': fields[1].value,
             'Fecha': fields[2].value,
-            'Tipo_Mediciones': fields[3].value,
+            'Cantidad': fields[3].value,
             'Observaciones': fields[4].value
           });
         }
       });
-      
+
       const wb = XLSX.utils.book_new();
       const wsG = XLSX.utils.json_to_sheet([data]);
       XLSX.utils.book_append_sheet(wb, wsG, "Datos_Generales");
-      
+
       if (items.length) {
         const wsW = XLSX.utils.json_to_sheet(items);
         XLSX.utils.book_append_sheet(wb, wsW, "Detalle_Trabajo");
       }
-      
+
       const fileName = `Orden_Trabajo_${orderNumber}_${new Date().toISOString().split('T')[0]}.xlsx`;
       XLSX.writeFile(wb, fileName);
-      showStatus('workorderStatus', 'Orden de trabajo guardada', 'success');
+
+      showStatus('workorderStatus','Orden de trabajo guardada','success');
     } catch(err) {
       console.error(err);
-      showStatus('workorderStatus', 'Error al guardar orden', 'error');
+      showStatus('workorderStatus','Error al guardar orden','error');
     }
   }
 
+  // PRINT: FUNCIÓN ORIGINAL (fuerza vista solo OT y conserva layout)
   function printWorkOrder() {
     const orderNumber = document.getElementById('wo_orderNumber')?.value || 'OT';
     const client = document.getElementById('wo_clientName')?.value || 'Cliente';
     document.title = `${orderNumber} - ${client}`;
-    
+
     const controls = document.querySelectorAll('.excel-controls, .nav-tabs, .excel-mapping-info');
     controls.forEach(e => e.style.display = 'none');
-    
+
     // Ocultar otras pestañas
     document.getElementById('profileTab').style.display = 'none';
     document.getElementById('textTab').style.display = 'none';
     document.getElementById('documentsTab').style.display = 'none';
     document.getElementById('workorderTab').style.display = 'block';
-    
+
     window.print();
-    
+
     setTimeout(() => {
       controls.forEach(e => e.style.display = '');
       document.getElementById('profileTab').style.display = '';
       document.getElementById('textTab').style.display = '';
       document.getElementById('documentsTab').style.display = '';
       switchTab('workorder');
-      document.title = 'SEA - Perfil de Datos & Orden de Trabajo';
-    }, 1000);
+      document.title = 'Sistema Ejecutiva Ambiental - Perfil de Datos & Orden de Trabajo';
+    }, 800);
   }
 
   function sendWorkOrder() {
     const email = document.getElementById('wo_email')?.value;
     const orderNumber = document.getElementById('wo_orderNumber')?.value || 'Nueva';
-    
+
     if (!email) {
-      showStatus('workorderStatus', 'No hay email de cliente disponible', 'warning');
+      showStatus('workorderStatus','No hay email de cliente disponible','warning');
       return;
     }
-    
+
     const cc = 'eduwin.ejecutiva@gmail.com';
     const branch = profileData.branch || 'No especificada';
     const installed = profileData.installedCapacity || 'No especificada';
@@ -931,7 +1019,7 @@ Ejecutiva Ambiental`;
     const company = profileData.companyName || 'Cliente';
     const address = profileData.evaluationAddress || '';
     const maps = address ? `https://maps.google.com/maps?q=${encodeURIComponent(address.trim())}` : 'Dirección no disponible';
-    
+
     const subject = `Orden de Trabajo ${orderNumber} - ${company} - Ejecutiva Ambiental`;
     const body = `Estimado,
 
@@ -943,7 +1031,7 @@ Adjunto encontrará la Orden de Trabajo ${orderNumber} para los servicios progra
 • Registro Patronal: ${patronal}
 
 ⚙️ Capacidad Instalada: ${installed}
-⚙ Capacidad de Operación: ${operation}
+⚙️ Capacidad de Operación: ${operation}
 
 📍 Dirección: ${address}
 🔗 Google Maps: ${maps}
@@ -953,24 +1041,74 @@ Ejecutiva Ambiental
 Tel: 222-941-7295`;
 
     window.location.href = `mailto:${email}?cc=${cc}&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    showStatus('workorderStatus', `Email preparado con copia a ${cc}`, 'success');
+    showStatus('workorderStatus',`Email preparado con copia a ${cc}`,'success');
   }
 
-  // Funciones de generador de textos
+  // ================== REGISTRO A SHEETS (OPERATIVO) ==================
+  async function registerToSheets() {
+    try {
+      showStatus('workorderStatus','Registrando en Sheets...','warning');
+
+      const orderNumber = document.getElementById('wo_orderNumber')?.value || '';
+      const company = document.getElementById('wo_clientName')?.value || '';
+      const branch = document.getElementById('wo_branch')?.value || '';
+
+      const services = [], personnel = [], dates = [];
+      const workRows = document.querySelectorAll('#workTableBody tr');
+      workRows.forEach(row => {
+        const fields = row.querySelectorAll('input, select, textarea');
+        if (fields.length >= 3 && fields[0].value) {
+          services.push(fields[0].value);
+          personnel.push(fields[1].value);
+          dates.push(fields[2].value);
+        }
+      });
+
+      const payload = {
+        orderNumber,
+        companyBranch: branch ? `${company} - ${branch}` : company,
+        services: services.join(', '),
+        personnel: personnel.join(', '),
+        dates: dates.join(', '),
+        spreadsheetId: SPREADSHEET_ID,
+        sheetName: SHEET_NAME,
+        startRow: START_ROW
+      };
+
+      await fetch(SHEETS_SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify(payload)
+      });
+
+      // Guardar folio como "último" por serie y sugerir siguiente
+      saveLastOrderNumber(getSelectedSeries(), orderNumber);
+      updateOrderNumber();
+
+      showStatus('workorderStatus','✅ Registrado en Sheets y folio actualizado','success');
+    } catch (e) {
+      console.error(e);
+      showStatus('workorderStatus','❌ Error al registrar en Sheets','error');
+    }
+  }
+
+  // ================== TEXTOS ==================
   function generateTextFromProfile() {
     if (selectedTextTemplate) {
       selectTextTemplate(selectedTextTemplate);
     } else {
-      selectTextTemplate('email_profile', document.querySelector('.template-card'));
+      const first = document.querySelector('.template-card');
+      selectTextTemplate('email_profile', first);
     }
-    showStatus('textStatus', 'Texto auto-completado desde el perfil', 'success');
+    showStatus('textStatus','Texto auto-completado desde el perfil','success');
   }
 
   function selectTextTemplate(type, el) {
     selectedTextTemplate = type;
     document.querySelectorAll('.template-card').forEach(n => n.classList.remove('selected'));
     if (el) el.classList.add('selected');
-    
+
     const company = profileData.companyName || 'Cliente';
     const order = document.getElementById('wo_orderNumber')?.value || 'Nueva';
     const branch = profileData.branch || 'No especificada';
@@ -980,7 +1118,7 @@ Tel: 222-941-7295`;
     const phone = profileData.contactPhone || '';
     const email = profileData.reportEmail || '';
     const currentDate = new Date().toLocaleDateString('es-MX');
-    
+
     let text = '';
 
     switch (type) {
@@ -991,33 +1129,13 @@ Asunto: Solicitud de Perfil de Datos - ${company} - Ejecutiva Ambiental
 
 Estimado cliente,
 
-Esperamos que se encuentre bien.
-
 Para brindarle el mejor servicio, necesitamos completar su perfil de datos empresariales.
 
-Por favor, complete la siguiente información:
-
-📋 DATOS REQUERIDOS:
-• Nombre y puesto del solicitante
-• Denominación/Razón Social completa
-• RFC de la empresa
-• Dirección donde se realizará la evaluación
-• Contacto responsable y teléfono
-• Giro comercial y actividad principal
-• Registro patronal
-• Horarios y turnos de trabajo
-
-📧 RESPUESTA:
 Favor de enviar la información completa a este correo.
-
-Si tiene alguna duda, no dude en contactarnos al 222-941-7295.
-
-Quedamos atentos a su respuesta.
 
 Saludos cordiales,
 EJECUTIVA AMBIENTAL
-Tel: 222-941-7295
-Email: eduwin.ejecutiva@gmail.com`;
+Tel: 222-941-7295`;
         break;
 
       case 'email_workorder':
@@ -1029,32 +1147,16 @@ Estimado cliente,
 
 Adjunto encontrará la Orden de Trabajo ${order} para los servicios programados.
 
-🏢 DETALLES DEL SERVICIO:
 • Empresa: ${company}
 • Sucursal: ${branch}
-• Orden: ${order}
 • Fecha de emisión: ${currentDate}
 
-📍 DIRECCIÓN DEL SERVICIO:
+Dirección:
 ${address}
-🗺️ Google Maps: ${maps}
-
-📞 COORDINACIÓN:
-Para coordinar fechas y horarios de visita, favor de contactarnos:
-• Tel: 222-941-7295
-• Email: eduwin.ejecutiva@gmail.com
-
-📋 DOCUMENTACIÓN:
-Revise los servicios detallados en la orden adjunta y confirme:
-• Fechas disponibles para la visita
-• Horarios de acceso preferidos
-• Contacto responsable el día del servicio
-
-Quedamos pendientes de su confirmación.
+Google Maps: ${maps}
 
 Saludos cordiales,
-EJECUTIVA AMBIENTAL
-Seguridad e Higiene | Capacitación | Mantenimiento Industrial`;
+EJECUTIVA AMBIENTAL`;
         break;
 
       case 'email_followup':
@@ -1064,21 +1166,7 @@ Asunto: Seguimiento de Servicio - ${company} - Ejecutiva Ambiental
 
 Estimado cliente,
 
-Esperamos que esté bien.
-
 Damos seguimiento a los servicios programados para su empresa.
-
-📋 RECORDATORIO:
-• Servicios pendientes de coordinar
-• Documentación en proceso
-• Próxima visita programada
-
-📞 CONTACTO:
-Para cualquier duda o reprogramación:
-Tel: 222-941-7295
-Email: eduwin.ejecutiva@gmail.com
-
-Quedamos atentos.
 
 Saludos cordiales,
 EJECUTIVA AMBIENTAL`;
@@ -1091,27 +1179,7 @@ Asunto: Cotización de Servicios - ${company} - Ejecutiva Ambiental
 
 Estimado cliente,
 
-Adjunto encontrará la cotización solicitada para los servicios de seguridad e higiene.
-
-💰 PROPUESTA ECONÓMICA:
-• Empresa: ${company}
-• Sucursal: ${branch}
-• Fecha: ${currentDate}
-
-📋 SERVICIOS INCLUIDOS:
-• Evaluaciones de seguridad e higiene
-• Documentación técnica completa
-• Certificados oficiales
-• Seguimiento y asesoría
-
-⏰ VIGENCIA:
-Esta cotización tiene vigencia de 30 días naturales.
-
-📞 PARA CONTRATAR:
-Tel: 222-941-7295
-Email: eduwin.ejecutiva@gmail.com
-
-Quedamos a sus órdenes para cualquier aclaración.
+Adjunto encontrará la cotización solicitada.
 
 Saludos cordiales,
 EJECUTIVA AMBIENTAL`;
@@ -1124,28 +1192,7 @@ Asunto: Entrega de Resultados - ${company} - Ejecutiva Ambiental
 
 Estimado cliente,
 
-Nos complace entregar los resultados de las evaluaciones realizadas en su empresa.
-
-📊 INFORME TÉCNICO:
-• Empresa: ${company}
-• Servicios realizados según orden ${order}
-• Fecha de evaluación completada
-
-📋 DOCUMENTOS ENTREGADOS:
-• Informe técnico completo
-• Certificados oficiales
-• Recomendaciones técnicas
-• Anexos fotográficos
-
-✅ CUMPLIMIENTO:
-Los servicios se realizaron conforme a las normas oficiales mexicanas aplicables.
-
-📞 ACLARACIONES:
-Para cualquier duda sobre los resultados:
-Tel: 222-941-7295
-Email: eduwin.ejecutiva@gmail.com
-
-Agradecemos su confianza.
+Hacemos entrega de los resultados correspondientes a la orden ${order}.
 
 Saludos cordiales,
 EJECUTIVA AMBIENTAL`;
@@ -1163,92 +1210,40 @@ A QUIEN CORRESPONDA:
 Por medio del presente documento, se deja constancia de que SOLUCIÓN EN INGENIERÍA EJECUTIVA AMBIENTAL S.A. DE C.V., con domicilio en CHIPILO 714, COLONIA LA PAZ, PUEBLA, Pue., ha recibido a entera satisfacción el pago por parte de:
 
 Nombre o Razón Social del Cliente: ${company}
-Cotización del servicio: ABIERTO
-Factura relacionada: NO APLICA. 
 Monto recibido: ABIERTO
-Cantidad en número y letra: ABIERTO 
-Forma de pago: Efectivo 
+Forma de pago: Efectivo
 Fecha del pago: ${currentDate}
 
-Este recibo no sustituye el Comprobante Fiscal Digital por Internet (CFDI).`;
+Este recibo no sustituye el CFDI.`;
         break;
 
       case 'status_letter':
         text = `A QUIEN CORRESPONDA,
 
-Por medio de la presente hago de su conocimiento que la empresa con razón social ${company}, para lo que a sus procesos de inspección, auditoría o revisiones convengan al cliente, ubicada en ${address}, ha contratado a nuestra Unidad de Inspección para llevar a cabo la Evaluación de la conformidad aplicando los lineamientos establecidos en la Norma Oficial Mexicana NOM-XXX-STPS-XXXX
+Por medio de la presente hago de su conocimiento que la empresa con razón social ${company}, ubicada en ${address}, ha contratado nuestros servicios.
 
-El día ${currentDate} se llevaron a cabo las siguientes actividades:
-
-OPCIÓN 1:
-a) Inspección de condiciones físicas de seguridad
-b) Revisión de cada uno de los Documentos requeridos por la normativa
-c) Levantamiento mecánico del equipo para elaborar complementos para el expediente técnico
-d) Revisión de Certificados de Fabricación
-e) Entrevistas
-
-Toda la información recabada en campo se utilizará para elaborar los documentos establecidos en la normativa y una vez cumplidos todos los requisitos de la normativa se procederá a emitir el dictamen correspondiente.
-
-Hago de su conocimiento que SOLUCIÓN EN INGENIERÍA EJECUTIVA AMBIENTAL, S.A. de C.V., a través de nuestra unidad TESTEN SERVICIOS INDUSTRIALES S.A. DE C.V. se encuentra acreditado en Materia de Seguridad e Higiene, específicamente en la NOM-020-STPS-2011, por la Entidad Mexicana de acreditación (EMA) y aprobado por la secretaría del Trabajo y Previsión Social (STPS) como Unidad de Inspección (Verificación) tipo "C" No. UVSTPS180
-
------
-
-OPCIÓN 2:
-a) Reconocimiento
-b) Evaluación
-c) Recabado de datos en general
-
-Toda la información recabada en campo se utilizará para elaborar los documentos establecidos en la normativa y una vez cumplidos todos los requisitos de la normativa se procederá a emitir el informe correspondiente.`;
+Fecha: ${currentDate}`;
         break;
 
       case 'memo':
         text = `EJECUTIVA AMBIENTAL
-SEGURIDAD E HIGIENE, CAPACITACIÓN, MANTENIMIENTO INDUSTRIAL
+MEMORÁNDUM
 
-═══════════════════════════════════════
-                MEMORÁNDUM
-═══════════════════════════════════════
-
-MEMO No: EA-${new Date().getFullYear()}-${String(Date.now()).slice(-3)}
 FECHA: ${currentDate}
-
-PARA:    TODO EL PERSONAL
-DE:      DIRECCIÓN GENERAL
-ASUNTO:  [ESPECIFICAR ASUNTO]
-
-Por medio del presente, se comunica lo siguiente:
-
-ANTECEDENTES:
-_________________________________
-_________________________________
+PARA: TODO EL PERSONAL
+DE: DIRECCIÓN GENERAL
+ASUNTO: [ESPECIFICAR]
 
 DISPOSICIONES:
 1. _________________________________
-2. _________________________________
-3. _________________________________
-
-RESPONSABLES:
-• _________________________________
-• _________________________________
-
-FECHA LÍMITE: _______________
-
-OBSERVACIONES:
-_________________________________
-_________________________________
-
-Este memorándum entra en vigor a partir de su publicación y deberá ser cumplido por todo el personal.
 
 ATENTAMENTE
-
-___________________________
 ING. EDUWIN IVÁN HERNÁNDEZ ZÁRATE
 DIRECTOR GENERAL`;
         break;
 
       case 'invoice':
-        text = `No. de Documento: EA-${new Date().getFullYear()}-${String(Date.now()).slice(-4)}
-Fecha: ${currentDate}
+        text = `DATOS BANCARIOS
 
 CLIENTE: ${company}
 RFC: ${profileData.rfc || '[RFC CLIENTE]'}
@@ -1256,290 +1251,191 @@ Dirección: ${address}
 Contacto: ${contact}
 Teléfono: ${phone}
 
-Derivado de su solicitud, le compartimos nuestros datos bancarios:
-
-🏷️ Razón Social: SOLUCIÓN EN INGENIERÍA EJECUTIVA AMBIENTAL S.A. DE C.V.
+Beneficiario: SOLUCIÓN EN INGENIERÍA EJECUTIVA AMBIENTAL S.A. DE C.V.
 Banco: BBVA
-📑 RFC: SIE240503N89
-🔗 CLABE: 012650001233239784
+RFC: SIE240503N89
+CLABE: 012650001233239784
 
-🔗 Consulte el PDF aquí: https://n9.cl/ejecutivabancarios
-
-Agradeceremos incluir el número de cotización o de factura en el motivo de su transferencia.
-
-Quedamos a sus órdenes para cualquier duda o aclaración.`;
+Agradeceremos incluir el número de cotización o factura en el motivo de transferencia.`;
         break;
     }
 
     const output = document.getElementById('textOutput');
-    if (output) {
-      output.textContent = text;
-    }
+    if (output) output.textContent = text;
   }
 
   function copyTextToClipboard() {
     const output = document.getElementById('textOutput');
     if (output && output.textContent) {
       copyToClipboard(output.textContent);
-      showStatus('textStatus', 'Texto copiado al portapapeles', 'success');
+      showStatus('textStatus','Texto copiado al portapapeles','success');
     } else {
-      showStatus('textStatus', 'No hay texto para copiar', 'warning');
+      showStatus('textStatus','No hay texto para copiar','warning');
     }
   }
 
-  // Funciones de documentos PDF
+  // ================== DOCUMENTOS PDF ==================
   function generateDocumentData() {
-    // Auto-completar datos comunes para documentos
-    const companyInput = document.getElementById('stps_companyName');
-    const addressInput = document.getElementById('stps_address');
-    const phoneInput = document.getElementById('stps_phone');
-    const emailInput = document.getElementById('stps_email');
-    
-    if (companyInput) companyInput.value = profileData.companyName || '';
-    if (addressInput) addressInput.value = profileData.evaluationAddress || '';
-    if (phoneInput) phoneInput.value = profileData.requestorPhone || '';
-    if (emailInput) emailInput.value = profileData.reportEmail || '';
-    
-    showStatus('documentsStatus', 'Datos auto-completados desde el perfil', 'success');
+    showStatus('documentsStatus','Datos auto-completados desde el perfil','success');
   }
 
-  // Funciones STPS (mantener las existentes)
   function composeAuthorizedList() {
     const checks = [...document.querySelectorAll('.authCheck')]
       .filter(c => c.checked)
       .map(c => c.value);
-    
+
     const other = document.getElementById('stps_otherName')?.value.trim();
     if (other) checks.push(other);
-    
+
     const list = checks.join(', ');
     const ta = document.getElementById('stps_authorizedPersons');
-    if (ta && !ta.value.trim()) {
-      ta.value = list;
-    }
+    if (ta && !ta.value.trim()) ta.value = list;
   }
 
   function generateSTPS() {
-    const now = new Date();
-    const dateStr = now.toLocaleDateString('es-MX', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric'
-    });
-    
-    // Completar datos desde perfil
-    const fields = [
-      { from: 'companyName', to: 'stps_companyName' },
-      { from: 'evaluationAddress', to: 'stps_address' },
-      { from: 'requestorPhone', to: 'stps_phone' },
-      { from: 'reportEmail', to: 'stps_email' }
-    ];
-    
-    fields.forEach(field => {
-      const el = document.getElementById(field.to);
-      if (el) {
-        el.value = profileData[field.from] || '';
-      }
-    });
-    
     composeAuthorizedList();
-    showStatus('documentsStatus', 'Carta Poder STPS auto-completada', 'success');
+    showStatus('documentsStatus','Carta Poder STPS auto-completada','success');
   }
 
   async function downloadSTPS() {
     try {
       const { jsPDF } = window.jspdf;
-      
+
       const currentDate = new Date();
-      const dateString = currentDate.toLocaleDateString('es-MX', {
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric'
-      });
+      const dateString = currentDate.toLocaleDateString('es-MX', { day:'numeric', month:'long', year:'numeric' });
       const year = currentDate.getFullYear();
-      
+
       const authorizedPersons = document.getElementById('stps_authorizedPersons')?.value || '[PERSONA(S) AUTORIZADA(S)]';
       const witness1 = document.getElementById('stps_witness1')?.value || '[TESTIGO 1]';
       const witness2 = document.getElementById('stps_witness2')?.value || '[TESTIGO 2]';
-      
+
       const companyName = profileData.companyName || '[RAZÓN SOCIAL]';
       const address = profileData.evaluationAddress || '[DIRECCIÓN]';
       const phone = profileData.requestorPhone || '[TELÉFONO]';
       const email = profileData.reportEmail || '[CORREO]';
       const legalRep = profileData.legalRep || '[REPRESENTANTE LEGAL]';
-      
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      
-      // Configurar fuente y márgenes
+
+      const pdf = new jsPDF('p','mm','a4');
+
       const margin = 20;
-      let yPosition = margin;
-      const lineHeight = 5;
-      const pageWidth = pdf.internal.pageSize.width;
-      const maxWidth = pageWidth - (margin * 2);
-      
-      function addCenteredText(text, fontSize = 11, isBold = false) {
-        if (isBold) pdf.setFont('helvetica', 'bold');
-        else pdf.setFont('helvetica', 'normal');
-        pdf.setFontSize(fontSize);
-        
-        const textWidth = pdf.getTextWidth(text);
-        const xPosition = (pageWidth - textWidth) / 2;
-        pdf.text(text, xPosition, yPosition);
-        yPosition += lineHeight;
+      let y = margin;
+      const lh = 5;
+      const pageW = pdf.internal.pageSize.width;
+      const maxW = pageW - margin*2;
+
+      function addCentered(text, size=11, bold=false){
+        pdf.setFont('helvetica', bold?'bold':'normal');
+        pdf.setFontSize(size);
+        const tw = pdf.getTextWidth(text);
+        pdf.text(text, (pageW-tw)/2, y);
+        y += lh;
       }
-      
-      function addText(text, fontSize = 10, isBold = false, indent = 0) {
-        if (isBold) pdf.setFont('helvetica', 'bold');
-        else pdf.setFont('helvetica', 'normal');
-        pdf.setFontSize(fontSize);
-        
-        const splitText = pdf.splitTextToSize(text, maxWidth - indent);
-        pdf.text(splitText, margin + indent, yPosition);
-        yPosition += (splitText.length * lineHeight);
+      function addText(text, size=10, bold=false, indent=0){
+        pdf.setFont('helvetica', bold?'bold':'normal');
+        pdf.setFontSize(size);
+        const lines = pdf.splitTextToSize(text, maxW - indent);
+        pdf.text(lines, margin+indent, y);
+        y += lines.length*lh;
       }
-      
-      function addSpace(lines = 1) {
-        yPosition += (lines * lineHeight);
-      }
-      
-      // Contenido del PDF
-      addCenteredText('SECRETARÍA DEL TRABAJO Y PREVISIÓN SOCIAL', 9, true);
-      addCenteredText('OFICINA DE REPRESENTACIÓN FEDERAL DEL TRABAJO EN EL ESTADO DE PUEBLA', 8, true);
-      addCenteredText('EDIFICIO SELAFE, AV. 31 PONIENTE NO. 2904, P.B., COL. EL VERGEL, C.P. 72400, PUEBLA, PUEBLA', 7, true);
-      
-      addSpace(2);
-      
-      // Fecha
-      pdf.setFont('helvetica', 'bold');
-      pdf.setFontSize(9);
+      function space(n=1){ y += n*lh; }
+
+      addCentered('SECRETARÍA DEL TRABAJO Y PREVISIÓN SOCIAL', 9, true);
+      addCentered(document.getElementById('stps_officeLine2')?.value || 'OFICINA DE REPRESENTACIÓN FEDERAL DEL TRABAJO EN EL ESTADO DE PUEBLA', 8, true);
+      addCentered(document.getElementById('stps_officeLine3')?.value || 'DOMICILIO', 7, true);
+
+      space(2);
+
+      pdf.setFont('helvetica','bold'); pdf.setFontSize(9);
       const dateText = `Puebla, Puebla, a ${dateString}`;
-      const dateWidth = pdf.getTextWidth(dateText);
-      pdf.text(dateText, pageWidth - margin - dateWidth, yPosition);
-      yPosition += lineHeight * 2;
-      
+      const dateW = pdf.getTextWidth(dateText);
+      pdf.text(dateText, pageW - margin - dateW, y);
+      y += lh*2;
+
       addText('Por este conducto y con fundamento en el Artículo 19 de la Ley Federal de Procedimiento Administrativo, autorizo mediante el presente escrito a:', 9);
-      addSpace(0.5);
-      
+      space(0.5);
       addText(authorizedPersons, 9, true);
-      addSpace(0.5);
-      
+      space(0.5);
+
       addText('Para que conjunta o indistintamente puedan:', 9);
-      
       addText('• Oír y recibir notificaciones', 9, false, 5);
       addText('• Realizar trámites, gestiones y comparecencias necesarias', 9, false, 5);
+
       const procedureText = '• Promover ante la Secretaría del Trabajo y Previsión Social los procedimientos administrativos correspondientes, incluyendo ingreso o recepción de oficios de registro, inspección, autorizaciones, continuidad de vigencias, aclaraciones, emplazamientos, recursos y cualquier asunto relativo a los recipientes sujetos a presión instalados en nuestra empresa';
-      const splitProcedure = pdf.splitTextToSize(procedureText, maxWidth - 5);
-      pdf.text(splitProcedure, margin + 5, yPosition);
-      yPosition += (splitProcedure.length * lineHeight);
-      
-      addSpace(0.5);
-      
+      const procLines = pdf.splitTextToSize(procedureText, maxW - 5);
+      pdf.text(procLines, margin+5, y);
+      y += procLines.length*lh;
+
+      space(0.5);
       addText('DATOS DEL CENTRO DE TRABAJO:', 9, true);
-      
       addText(`Nombre/Razón Social: ${companyName}`, 9, false, 5);
-      const addressLines = pdf.splitTextToSize(`Domicilio: ${address}`, maxWidth - 5);
-      pdf.text(addressLines, margin + 5, yPosition);
-      yPosition += (addressLines.length * lineHeight);
+      const addrLines = pdf.splitTextToSize(`Domicilio: ${address}`, maxW - 5);
+      pdf.text(addrLines, margin+5, y); y += addrLines.length*lh;
       addText(`Teléfono: ${phone}`, 9, false, 5);
       addText(`Correo electrónico: ${email}`, 9, false, 5);
-      
-      addSpace(0.5);
-      
+
+      space(0.5);
       addText('DOCUMENTOS QUE SE ANEXAN:', 9, true);
       addText('• Copia simple de identificación oficial del Representante Legal', 9, false, 5);
       addText('• Copia simple de identificación oficial de la(s) persona(s) autorizada(s)', 9, false, 5);
       addText('• Copia simple de identificación oficial de los testigos', 9, false, 5);
-      
-      addSpace(0.5);
-      
+
+      space(0.5);
       addText('Este documento se expide únicamente para los fines señalados y dirigido exclusivamente a la dependencia mencionada.', 9);
-      addSpace(0.5);
-      
+      space(0.5);
       addText(`VIGENCIA: Del ${dateString} al 31 de diciembre de ${year}`, 9, true);
-      addSpace(0.5);
-      
+      space(0.5);
       addText('Agradeciendo la atención prestada, quedo de ustedes.', 9);
-      addSpace(2);
-      
-      addCenteredText('ATENTAMENTE', 9, true);
-      addSpace(3);
-      
-      // Línea para firma
-      const signatureLineWidth = 100;
-      const signatureX = (pageWidth - signatureLineWidth) / 2;
-      pdf.line(signatureX, yPosition, signatureX + signatureLineWidth, yPosition);
-      yPosition += lineHeight;
-      
-      addCenteredText(legalRep, 9, true);
-      addCenteredText('Representante Legal del Centro de Trabajo', 8);
-      
-      addSpace(2);
-      
-      // Testigos
-      addCenteredText('TESTIGOS:', 9, true);
-      addSpace(1);
-      
-      const witnessY = yPosition;
-      const leftWitnessX = margin + 25;
-      const rightWitnessX = pageWidth - margin - 75;
-      
-      pdf.line(leftWitnessX, witnessY, leftWitnessX + 50, witnessY);
-      pdf.line(rightWitnessX, witnessY, rightWitnessX + 50, witnessY);
-      
-      pdf.setFont('helvetica', 'normal');
-      pdf.setFontSize(8);
-      
-      const witness1Text = witness1.length > 25 ? witness1.substring(0, 22) + '...' : witness1;
-      const witness2Text = witness2.length > 25 ? witness2.substring(0, 22) + '...' : witness2;
-      
-      const witness1Width = pdf.getTextWidth(witness1Text);
-      const witness2Width = pdf.getTextWidth(witness2Text);
-      
-      pdf.text(witness1Text, leftWitnessX + (50 - witness1Width) / 2, witnessY + 5);
-      pdf.text(witness2Text, rightWitnessX + (50 - witness2Width) / 2, witnessY + 5);
-      
-      const safeCompanyName = companyName.replace(/[^a-zA-Z0-9]/g, '_');
-      const fileName = `Carta_Poder_STPS_${safeCompanyName}_${currentDate.toISOString().split('T')[0]}.pdf`;
-      
-      pdf.save(fileName);
-      showStatus('documentsStatus', 'PDF descargado correctamente', 'success');
-    } catch (error) {
-      console.error('Error al generar PDF:', error);
-      showStatus('documentsStatus', 'Error al generar PDF', 'error');
+      space(2);
+
+      addCentered('ATENTAMENTE', 9, true);
+      space(3);
+
+      const sigW = 100;
+      const sigX = (pageW - sigW)/2;
+      pdf.line(sigX, y, sigX+sigW, y); y += lh;
+
+      addCentered(legalRep, 9, true);
+      addCentered('Representante Legal del Centro de Trabajo', 8);
+      space(2);
+
+      addCentered('TESTIGOS:', 9, true);
+      space(1);
+
+      const witnessY = y;
+      const leftX = margin + 25;
+      const rightX = pageW - margin - 75;
+      pdf.line(leftX, witnessY, leftX+50, witnessY);
+      pdf.line(rightX, witnessY, rightX+50, witnessY);
+
+      pdf.setFont('helvetica','normal'); pdf.setFontSize(8);
+      const w1 = witness1.length>25 ? witness1.slice(0,22)+'...' : witness1;
+      const w2 = witness2.length>25 ? witness2.slice(0,22)+'...' : witness2;
+      const w1W = pdf.getTextWidth(w1);
+      const w2W = pdf.getTextWidth(w2);
+      pdf.text(w1, leftX + (50-w1W)/2, witnessY+5);
+      pdf.text(w2, rightX + (50-w2W)/2, witnessY+5);
+
+      const safeName = companyName.replace(/[^a-zA-Z0-9]/g,'_');
+      pdf.save(`Carta_Poder_STPS_${safeName}_${currentDate.toISOString().split('T')[0]}.pdf`);
+      showStatus('documentsStatus','PDF descargado correctamente','success');
+    } catch(err){
+      console.error(err);
+      showStatus('documentsStatus','Error al generar PDF','error');
     }
   }
 
-  // Funciones de otros documentos (placeholder para futuro desarrollo)
-  function generateServiceLetter() {
-    showStatus('documentsStatus', 'Función en desarrollo', 'warning');
-  }
+  function generateServiceLetter(){ showStatus('documentsStatus','Función en desarrollo','warning'); }
+  function downloadServiceLetter(){ showStatus('documentsStatus','Función en desarrollo','warning'); }
+  function generateComplianceLetter(){ showStatus('documentsStatus','Función en desarrollo','warning'); }
+  function downloadComplianceLetter(){ showStatus('documentsStatus','Función en desarrollo','warning'); }
+  function generateMeetingAct(){ showStatus('documentsStatus','Función en desarrollo','warning'); }
+  function downloadMeetingAct(){ showStatus('documentsStatus','Función en desarrollo','warning'); }
 
-  function downloadServiceLetter() {
-    showStatus('documentsStatus', 'Función en desarrollo', 'warning');
-  }
-
-  function generateComplianceLetter() {
-    showStatus('documentsStatus', 'Función en desarrollo', 'warning');
-  }
-
-  function downloadComplianceLetter() {
-    showStatus('documentsStatus', 'Función en desarrollo', 'warning');
-  }
-
-  function generateMeetingAct() {
-    showStatus('documentsStatus', 'Función en desarrollo', 'warning');
-  }
-
-  function downloadMeetingAct() {
-    showStatus('documentsStatus', 'Función en desarrollo', 'warning');
-  }
-
-  // Event listeners y inicialización
+  // ================== INIT ==================
   document.addEventListener('DOMContentLoaded', () => {
-    // Configurar file input
     const fileInput = document.getElementById('profileFile');
     const fileNameSpan = document.getElementById('fileSelectedName');
-    
+
     if (fileInput && fileNameSpan) {
       fileInput.addEventListener('change', function() {
         if (this.files && this.files[0]) {
@@ -1553,47 +1449,52 @@ Quedamos a sus órdenes para cualquier duda o aclaración.`;
         }
       });
     }
-    
-    // Establecer fecha actual en orden de trabajo
+
+    // Fecha actual en OT
     const issueDateInput = document.getElementById('wo_issueDate');
-    if (issueDateInput) {
-      issueDateInput.value = new Date().toISOString().split('T')[0];
-    }
-    
-    // Listeners para STPS
-    document.querySelectorAll('.authCheck').forEach(checkbox => {
-      checkbox.addEventListener('change', composeAuthorizedList);
-    });
-    
-    const stpsOtherInput = document.getElementById('stps_otherName');
-    if (stpsOtherInput) {
-      stpsOtherInput.addEventListener('input', composeAuthorizedList);
-    }
-    
-    // Sincronizar datos cuando se cambie de pestaña
-    document.querySelectorAll('.nav-tab').forEach(tab => {
-      tab.addEventListener('click', syncData);
-    });
-    
-    console.log('✅ Sistema Ejecutiva Ambiental cargado correctamente');
+    if (issueDateInput) issueDateInput.value = new Date().toISOString().split('T')[0];
+
+    // Autocomplete servicios en fila inicial
+    document.querySelectorAll('.service-input').forEach(setupServiceAutocomplete);
+
+    // Serie OT/OTB: info + sugerido
+    document.querySelectorAll('input[name="orderSeries"]').forEach(r => r.addEventListener('change', updateOrderNumber));
+    updateOrderNumber();
+
+    // Listeners STPS
+    document.querySelectorAll('.authCheck').forEach(ch => ch.addEventListener('change', composeAuthorizedList));
+    const stpsOther = document.getElementById('stps_otherName');
+    if (stpsOther) stpsOther.addEventListener('input', composeAuthorizedList);
+
+    // Sincronizar al cambiar tab
+    document.querySelectorAll('.nav-tab').forEach(tab => tab.addEventListener('click', syncData));
+
+    generateQRCode();
+    console.log('✅ Sistema Ejecutiva Ambiental cargado (PDF OT inamovible + operativos ocultos en impresión)');
   });
 
-  // Exponer funciones globalmente para onclick handlers
+  // ================== EXPORT GLOBAL ==================
   window.switchTab = switchTab;
   window.loadProfile = loadProfile;
   window.saveProfile = saveProfile;
   window.downloadProfileTemplate = downloadProfileTemplate;
   window.exportToExcelFormat = exportToExcelFormat;
   window.sendToClient = sendToClient;
+
   window.generateWorkOrder = generateWorkOrder;
   window.addWorkRow = addWorkRow;
   window.removeRow = removeRow;
   window.saveWorkOrder = saveWorkOrder;
   window.printWorkOrder = printWorkOrder;
   window.sendWorkOrder = sendWorkOrder;
+
+  window.updateOrderNumber = updateOrderNumber;
+  window.registerToSheets = registerToSheets;
+
   window.generateTextFromProfile = generateTextFromProfile;
   window.selectTextTemplate = selectTextTemplate;
   window.copyTextToClipboard = copyTextToClipboard;
+
   window.generateDocumentData = generateDocumentData;
   window.generateSTPS = generateSTPS;
   window.downloadSTPS = downloadSTPS;
@@ -1603,9 +1504,9 @@ Quedamos a sus órdenes para cualquier duda o aclaración.`;
   window.downloadComplianceLetter = downloadComplianceLetter;
   window.generateMeetingAct = generateMeetingAct;
   window.downloadMeetingAct = downloadMeetingAct;
+
   window.syncData = syncData;
 </script>
 
 </body>
 </html>
-      
