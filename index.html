@@ -1044,54 +1044,57 @@ Tel: 222-941-7295`;
     showStatus('workorderStatus',`Email preparado con copia a ${cc}`,'success');
   }
 
-  // ================== REGISTRO A SHEETS (OPERATIVO) ==================
-  async function registerToSheets() {
-    try {
-      showStatus('workorderStatus','Registrando en Sheets...','warning');
 
-      const orderNumber = document.getElementById('wo_orderNumber')?.value || '';
-      const company = document.getElementById('wo_clientName')?.value || '';
-      const branch = document.getElementById('wo_branch')?.value || '';
+// ================== REGISTRO A SHEETS (OPERATIVO) ==================
+async function registerToSheets() {
+  try {
+    showStatus('workorderStatus','Registrando en Sheets...','warning');
 
-      const services = [], personnel = [], dates = [];
-      const workRows = document.querySelectorAll('#workTableBody tr');
-      workRows.forEach(row => {
-        const fields = row.querySelectorAll('input, select, textarea');
-        if (fields.length >= 3 && fields[0].value) {
-          services.push(fields[0].value);
-          personnel.push(fields[1].value);
-          dates.push(fields[2].value);
-        }
-      });
+    const orderNumber = document.getElementById('wo_orderNumber')?.value || '';
+    const company = document.getElementById('wo_clientName')?.value || '';
+    const branch = document.getElementById('wo_branch')?.value || '';
 
-      const payload = {
-        orderNumber,
-        companyBranch: branch ? `${company} - ${branch}` : company,
-        services: services.join(', '),
-        personnel: personnel.join(', '),
-        dates: dates.join(', '),
-        spreadsheetId: SPREADSHEET_ID,
-        sheetName: SHEET_NAME,
-        startRow: START_ROW
-      };
+    const services = [], personnel = [], dates = [];
+    const workRows = document.querySelectorAll('#workTableBody tr');
+    workRows.forEach(row => {
+      const fields = row.querySelectorAll('input, select, textarea');
+      if (fields.length >= 3 && fields[0].value) {
+        services.push((fields[0].value || '').trim());
+        personnel.push((fields[1].value || '').trim());
+        dates.push((fields[2].value || '').trim());
+      }
+    });
 
-      await fetch(SHEETS_SCRIPT_URL, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify(payload)
-      });
+    const payload = {
+      orderNumber,
+      companyBranch: branch ? `${company} - ${branch}` : company,
+      services: services.join(', '),
+      personnel: personnel.join(', '),
+      dates: dates.join(', '),
+      startRow: START_ROW // 93 en tu config
+    };
 
-      // Guardar folio como "último" por serie y sugerir siguiente
-      saveLastOrderNumber(getSelectedSeries(), orderNumber);
-      updateOrderNumber();
+    // IMPORTANTE:
+    // - Mantén mode:'no-cors' (porque Apps Script no da CORS headers)
+    // - PERO el Content-Type debe ser text/plain para que el body llegue.
+    await fetch(SHEETS_SCRIPT_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(payload)
+    });
 
-      showStatus('workorderStatus','✅ Registrado en Sheets y folio actualizado','success');
-    } catch (e) {
-      console.error(e);
-      showStatus('workorderStatus','❌ Error al registrar en Sheets','error');
-    }
+    // No podemos leer respuesta por no-cors; asumimos que se envió.
+    saveLastOrderNumber(getSelectedSeries(), orderNumber);
+    updateOrderNumber();
+
+    showStatus('workorderStatus','✅ Enviado a Sheets (webhook) y folio actualizado','success');
+  } catch (e) {
+    console.error(e);
+    showStatus('workorderStatus','❌ Error al enviar a Sheets','error');
   }
+}
+
 
   // ================== TEXTOS ==================
   function generateTextFromProfile() {
