@@ -529,11 +529,12 @@
 
 <!-- ========= SCRIPT PRINCIPAL ========= -->
 <script>
-// ================== CONFIG GOOGLE SHEETS (OPERATIVO) ==================
-  const SHEETS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbypj4AfQxsvRLl_bMOLZtiNS55c7Sw4-bfwpyw77FZ85EM_qQqYBC3dhjEqCsprCoX1gA/exec';
+// ================== CONFIG GOOGLE SHEETS ==================
+  // Asegúrate que esta URL sea la de tu nueva implementación del script
+  const SHEETS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyYurtCwbMvbHlhNR9JzF16R-86wpQfX84lN_uL3jgBbk6CAC5nPjAmkOxWJ3NtUmFRKA/exec';
   const SPREADSHEET_ID = '1pWIzrtLAh_YHow1LH55tIfgsCUoct-64JjPaBk5u10U';
-  const SHEET_NAME = 'PANEL2.0';
-  const START_ROW = 2; // Ajustado a tu configuración real
+  const SHEET_NAME = 'panel'; // Ahora apuntamos a la hoja 'panel'
+  const START_ROW = 0; // YA NO SE USA, el backend decide. Lo dejamos en 0.
 
   const PREDEFINED_SERVICES = [
     'NOM-001-STPS','NOM-002-STPS','NOM-004-STPS','NOM-006-STPS','NOM-011-STPS',
