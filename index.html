@@ -122,7 +122,7 @@
       @page{size:A4;margin:10mm}
 
       /* Solo OT */
-      #profileTab,#textTab,#documentsTab{display:none !important;}
+      #profileTab{display:none !important;}
       #workorderTab{display:block !important;}
     }
   </style>
@@ -138,8 +138,6 @@
   <div class="nav-tabs">
     <button class="nav-tab active" id="profileTabButton" onclick="switchTab('profile')">👤 Perfil</button>
     <button class="nav-tab" id="workorderTabButton" onclick="switchTab('workorder')">📋 Orden de trabajo</button>
-    <button class="nav-tab" id="textTabButton" onclick="switchTab('text')">📝 Textos</button>
-    <button class="nav-tab" id="documentsTabButton" onclick="switchTab('documents')">📄 Documentos</button>
   </div>
 
   <!-- ================= TAB 1: PERFIL ================= -->
@@ -167,7 +165,7 @@
         <div class="logo">EA</div>
         <div class="company-info">
           <h1>EJECUTIVA AMBIENTAL</h1>
-          <p>SEGURIDAD E HIGIENE, CAPACITACIÓN, MANTENIMIENTO INDUSTRIAL, PROTECCIÓN CIVIL, MEDIO AMBIENTE</p>
+          <p>EA-FSOC-06.03, REVISIÓN 02, EMISIÓN : ENERO, 2026</p>
         </div>
       </div>
       <div class="document-info">
@@ -233,7 +231,7 @@
         <div class="logo">EA</div>
         <div class="company-info">
           <h1>EJECUTIVA AMBIENTAL</h1>
-          <p>SEGURIDAD E HIGIENE, CAPACITACIÓN, MANTENIMIENTO INDUSTRIAL, PROTECCIÓN CIVIL, MEDIO AMBIENTE</p>
+          <p>EA-FSOC-06.03, REVISIÓN 02, EMISIÓN : ENERO, 2026</p>
         </div>
       </div>
       <div class="document-info">
@@ -266,7 +264,7 @@
     </div>
 
     <div class="section">
-      <div class="section-header">Información del Cliente (Auto-generada desde Perfil)</div>
+      <div class="section-header">Información del Cliente</div>
       <div class="section-content">
         <div class="form-grid">
           <div class="form-group"><label>Nombre o Razón Social</label><input type="text" id="wo_clientName" readonly style="background:#e9ecef"></div>
@@ -274,10 +272,10 @@
           <div class="form-group full-width"><label>Dirección del Servicio</label><input type="text" id="wo_serviceAddress" readonly style="background:#e9ecef"></div>
           <div class="form-group"><label>Responsable de atendernos</label><input type="text" id="wo_contactName" readonly style="background:#e9ecef"></div>
           <div class="form-group"><label>Teléfono</label><input type="tel" id="wo_phone" readonly style="background:#e9ecef"></div>
-          <div class="form-group"><label>Email</label><input type="email" id="wo_email" placeholder="Editable - completar manualmente"></div>
+          <div class="form-group"><label>Correo</label><input type="email" id="wo_email"></div>
         </div>
         <div class="form-group">
-          <label>Destinatario del Informe</label>
+          <label>A quien se dirige el informe</label>
           <div class="form-grid">
             <div class="form-group"><label>Nombre</label><input type="text" id="wo_reportTo" readonly style="background:#e9ecef"></div>
             <div class="form-group"><label>Puesto</label><input type="text" id="wo_reportPosition" readonly style="background:#e9ecef"></div>
@@ -332,7 +330,7 @@
 
         <div class="form-group full-width" style="margin-top:15px;">
           <label>Observaciones Generales</label>
-          <textarea id="wo_generalObservations" style="min-height:80px;" placeholder="📋 RECORDATORIO: Portar EPP..."></textarea>
+          <textarea id="wo_generalObservations" style="min-height:80px;" placeholder="📋 RECORDATORIO: Portar EPP (botas de seguridad, casco de seguridad, lentes de seguridad, protección auditiva, guantes de seguridad, chaleco)"></textarea></invoke>
         </div>
       </div>
     </div>
@@ -363,163 +361,6 @@
 
   </div>
 
-  <!-- ================= TAB 3: GENERADOR DE TEXTOS ================= -->
-  <div id="textTab" class="tab-content">
-    <div class="excel-controls">
-      <strong>📝 Generador de Textos:</strong>
-      <button onclick="generateTextFromProfile()">Auto-completar desde Perfil</button>
-      <button onclick="copyTextToClipboard()">Copiar Texto</button>
-      <span id="textStatus"></span>
-    </div>
-
-    <div class="section">
-      <div class="section-header">Seleccionar Tipo de Texto</div>
-      <div class="section-content">
-        <div class="template-grid">
-          <div class="template-card" onclick="selectTextTemplate('email_profile', this)">
-            <h4>📧 Email - Solicitud de Perfil</h4>
-            <p>Para solicitar datos del cliente</p>
-          </div>
-          <div class="template-card" onclick="selectTextTemplate('email_workorder', this)">
-            <h4>📧 Email - Orden de Trabajo</h4>
-            <p>Envío de orden con detalles</p>
-          </div>
-          <div class="template-card" onclick="selectTextTemplate('email_followup', this)">
-            <h4>📧 Email - Seguimiento</h4>
-            <p>Recordatorio y coordinación</p>
-          </div>
-          <div class="template-card" onclick="selectTextTemplate('email_quote', this)">
-            <h4>📧 Email - Cotización</h4>
-            <p>Envío de presupuesto</p>
-          </div>
-          <div class="template-card" onclick="selectTextTemplate('email_results', this)">
-            <h4>📧 Email - Resultados</h4>
-            <p>Entrega de informe final</p>
-          </div>
-          <div class="template-card" onclick="selectTextTemplate('receipt', this)">
-            <h4>💰 Recibo de Pago</h4>
-            <p>Comprobante de pago membretado</p>
-          </div>
-          <div class="template-card" onclick="selectTextTemplate('status_letter', this)">
-            <h4>📄 Carta Estatus</h4>
-            <p>Estado del servicio o proyecto</p>
-          </div>
-          <div class="template-card" onclick="selectTextTemplate('memo', this)">
-            <h4>📝 Memorándum</h4>
-            <p>Comunicación interna</p>
-          </div>
-          <div class="template-card" onclick="selectTextTemplate('invoice', this)">
-            <h4>📋 Datos bancarios</h4>
-            <p>Documento de facturación</p>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="section">
-      <div class="section-header">Texto Generado</div>
-      <div class="section-content">
-        <div class="text-output" id="textOutput">Selecciona un tipo de texto para generar el contenido...</div>
-        <button class="copy-btn" onclick="copyTextToClipboard()">📋 Copiar al Portapapeles</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ================= TAB 4: DOCUMENTOS PDF ================= -->
-  <div id="documentsTab" class="tab-content">
-    <div class="excel-controls">
-      <strong>📄 Generador de Documentos:</strong>
-      <button onclick="generateDocumentData()">Auto-completar desde Perfil</button>
-      <span id="documentsStatus"></span>
-    </div>
-
-    <div class="section">
-      <div class="section-header">Documentos Disponibles</div>
-      <div class="section-content">
-        <div class="document-grid">
-          <div class="document-card">
-            <h4>🏛️ Carta Poder STPS</h4>
-            <p>Documento oficial para la Secretaría del Trabajo y Previsión Social</p>
-            <div class="document-actions">
-              <button class="pdf-btn" onclick="generateSTPS()">Auto-completar</button>
-              <button class="pdf-btn" onclick="downloadSTPS()">Descargar PDF</button>
-            </div>
-          </div>
-
-          <div class="document-card">
-            <h4>📋 Carta de Servicios</h4>
-            <p>Documento que certifica los servicios realizados</p>
-            <div class="document-actions">
-              <button class="pdf-btn" onclick="generateServiceLetter()">Generar</button>
-              <button class="pdf-btn" onclick="downloadServiceLetter()">Descargar PDF</button>
-            </div>
-          </div>
-
-          <div class="document-card">
-            <h4>📄 Constancia de Cumplimiento</h4>
-            <p>Certificado de cumplimiento normativo</p>
-            <div class="document-actions">
-              <button class="pdf-btn" onclick="generateComplianceLetter()">Generar</button>
-              <button class="pdf-btn" onclick="downloadComplianceLetter()">Descargar PDF</button>
-            </div>
-          </div>
-
-          <div class="document-card">
-            <h4>📝 Acta de Reunión</h4>
-            <p>Documento de minuta de reunión técnica</p>
-            <div class="document-actions">
-              <button class="pdf-btn" onclick="generateMeetingAct()">Generar</button>
-              <button class="pdf-btn" onclick="downloadMeetingAct()">Descargar PDF</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Carta Poder STPS -->
-    <div class="section" id="stpsSection">
-      <div class="section-header">Configuración - Carta Poder STPS</div>
-      <div class="section-content">
-        <div class="form-grid">
-          <div class="form-group full-width">
-            <label>Línea 2 (Dependencia)</label>
-            <input type="text" id="stps_officeLine2" value="OFICINA DE REPRESENTACIÓN FEDERAL DEL TRABAJO EN EL ESTADO DE PUEBLA CON SEDE EN PUEBLA">
-          </div>
-          <div class="form-group full-width">
-            <label>Línea 3 (Domicilio)</label>
-            <input type="text" id="stps_officeLine3" value="EDIFICIO SELAFE, AV. 31 PONIENTE NO. 2904, P.B., COL. EL VERGEL, C.P. 72400, PUEBLA, PUEBLA">
-          </div>
-        </div>
-
-        <div class="form-grid">
-          <div class="form-group full-width">
-            <label>Selecciona una o varias personas autorizadas</label>
-            <div>
-              <label><input type="checkbox" class="authCheck" value="Gonzalo Eli Torres Quiroz"> Gonzalo Eli Torres Quiroz</label><br/>
-              <label><input type="checkbox" class="authCheck" value="Eduwin Iván Hernández Zárate"> Eduwin Iván Hernández Zárate</label><br/>
-              <label><input type="checkbox" class="authCheck" value="Jimmy Jeynson Ayala Borrallez"> Jimmy Jeynson Ayala Borrallez</label><br/>
-              <label><input type="checkbox" class="authCheck" value="Martín Luna Córdova"> Martín Luna Córdova</label>
-            </div>
-            <div style="margin-top:8px;">
-              <label>Otro (editable):</label>
-              <input type="text" id="stps_otherName" placeholder="Escribe otro nombre completo">
-            </div>
-
-            <div class="form-group full-width">
-              <label>Lista final (puedes editar manualmente)</label>
-              <textarea id="stps_authorizedPersons" style="min-height:70px;" placeholder="Nombres completos separados por comas"></textarea>
-            </div>
-          </div>
-        </div>
-
-        <div class="form-grid">
-          <div class="form-group"><label>Testigo 1</label><input type="text" id="stps_witness1" placeholder="Nombre completo del testigo 1"></div>
-          <div class="form-group"><label>Testigo 2</label><input type="text" id="stps_witness2" placeholder="Nombre completo del testigo 2"></div>
-        </div>
-      </div>
-    </div>
-
-  </div>
 </div>
 
 <!-- ========= LIBRERÍAS ========= -->
@@ -545,7 +386,6 @@
   // ================== VARIABLES GLOBALES ==================
   let profileData = {};
   let workOrderData = {};
-  let selectedTextTemplate = null;
 
   const excelCellMapping = {
     'requestorName':'D3','companyName':'D5','rfc':'D7','requestorPhone':'I7','legalRep':'D9',
@@ -610,9 +450,7 @@
 
     const tabMap = {
       'profile': { content: 'profileTab', button: 'profileTabButton' },
-      'workorder': { content: 'workorderTab', button: 'workorderTabButton' },
-      'text': { content: 'textTab', button: 'textTabButton' },
-      'documents': { content: 'documentsTab', button: 'documentsTabButton' }
+      'workorder': { content: 'workorderTab', button: 'workorderTabButton' }
     };
 
     if (tabMap[name]) {
@@ -984,8 +822,6 @@ Ejecutiva Ambiental`;
 
     // Ocultar otras pestañas
     document.getElementById('profileTab').style.display = 'none';
-    document.getElementById('textTab').style.display = 'none';
-    document.getElementById('documentsTab').style.display = 'none';
     document.getElementById('workorderTab').style.display = 'block';
 
     window.print();
@@ -993,8 +829,6 @@ Ejecutiva Ambiental`;
     setTimeout(() => {
       controls.forEach(e => e.style.display = '');
       document.getElementById('profileTab').style.display = '';
-      document.getElementById('textTab').style.display = '';
-      document.getElementById('documentsTab').style.display = '';
       switchTab('workorder');
       document.title = 'Sistema Ejecutiva Ambiental - Perfil de Datos & Orden de Trabajo';
     }, 800);
@@ -1095,344 +929,6 @@ async function registerToSheets() {
 }
 
 
-  // ================== TEXTOS ==================
-  function generateTextFromProfile() {
-    if (selectedTextTemplate) {
-      selectTextTemplate(selectedTextTemplate);
-    } else {
-      const first = document.querySelector('.template-card');
-      selectTextTemplate('email_profile', first);
-    }
-    showStatus('textStatus','Texto auto-completado desde el perfil','success');
-  }
-
-  function selectTextTemplate(type, el) {
-    selectedTextTemplate = type;
-    document.querySelectorAll('.template-card').forEach(n => n.classList.remove('selected'));
-    if (el) el.classList.add('selected');
-
-    const company = profileData.companyName || 'Cliente';
-    const order = document.getElementById('wo_orderNumber')?.value || 'Nueva';
-    const branch = profileData.branch || 'No especificada';
-    const address = profileData.evaluationAddress || '';
-    const maps = address ? `https://maps.google.com/maps?q=${encodeURIComponent(address.trim())}` : 'Dirección no disponible';
-    const contact = profileData.contactPerson || '';
-    const phone = profileData.contactPhone || '';
-    const email = profileData.reportEmail || '';
-    const currentDate = new Date().toLocaleDateString('es-MX');
-
-    let text = '';
-
-    switch (type) {
-      case 'email_profile':
-        text = `Para: ${email}
-CC: eduwin.ejecutiva@gmail.com
-Asunto: Solicitud de Perfil de Datos - ${company} - Ejecutiva Ambiental
-
-Estimado cliente,
-
-Para brindarle el mejor servicio, necesitamos completar su perfil de datos empresariales.
-
-Favor de enviar la información completa a este correo.
-
-Saludos cordiales,
-EJECUTIVA AMBIENTAL
-Tel: 222-941-7295`;
-        break;
-
-      case 'email_workorder':
-        text = `Para: ${email}
-CC: eduwin.ejecutiva@gmail.com
-Asunto: Orden de Trabajo ${order} - ${company} - Ejecutiva Ambiental
-
-Estimado cliente,
-
-Adjunto encontrará la Orden de Trabajo ${order} para los servicios programados.
-
-• Empresa: ${company}
-• Sucursal: ${branch}
-• Fecha de emisión: ${currentDate}
-
-Dirección:
-${address}
-Google Maps: ${maps}
-
-Saludos cordiales,
-EJECUTIVA AMBIENTAL`;
-        break;
-
-      case 'email_followup':
-        text = `Para: ${email}
-CC: eduwin.ejecutiva@gmail.com
-Asunto: Seguimiento de Servicio - ${company} - Ejecutiva Ambiental
-
-Estimado cliente,
-
-Damos seguimiento a los servicios programados para su empresa.
-
-Saludos cordiales,
-EJECUTIVA AMBIENTAL`;
-        break;
-
-      case 'email_quote':
-        text = `Para: ${email}
-CC: eduwin.ejecutiva@gmail.com
-Asunto: Cotización de Servicios - ${company} - Ejecutiva Ambiental
-
-Estimado cliente,
-
-Adjunto encontrará la cotización solicitada.
-
-Saludos cordiales,
-EJECUTIVA AMBIENTAL`;
-        break;
-
-      case 'email_results':
-        text = `Para: ${email}
-CC: eduwin.ejecutiva@gmail.com
-Asunto: Entrega de Resultados - ${company} - Ejecutiva Ambiental
-
-Estimado cliente,
-
-Hacemos entrega de los resultados correspondientes a la orden ${order}.
-
-Saludos cordiales,
-EJECUTIVA AMBIENTAL`;
-        break;
-
-      case 'receipt':
-        text = `ASUNTO: RECEPCIÓN DE PAGO
-
-RECIBO DE PAGO
-
-Lugar y fecha: Puebla, Pue., a ${currentDate}
-
-A QUIEN CORRESPONDA:
-
-Por medio del presente documento, se deja constancia de que SOLUCIÓN EN INGENIERÍA EJECUTIVA AMBIENTAL S.A. DE C.V., con domicilio en CHIPILO 714, COLONIA LA PAZ, PUEBLA, Pue., ha recibido a entera satisfacción el pago por parte de:
-
-Nombre o Razón Social del Cliente: ${company}
-Monto recibido: ABIERTO
-Forma de pago: Efectivo
-Fecha del pago: ${currentDate}
-
-Este recibo no sustituye el CFDI.`;
-        break;
-
-      case 'status_letter':
-        text = `A QUIEN CORRESPONDA,
-
-Por medio de la presente hago de su conocimiento que la empresa con razón social ${company}, ubicada en ${address}, ha contratado nuestros servicios.
-
-Fecha: ${currentDate}`;
-        break;
-
-      case 'memo':
-        text = `EJECUTIVA AMBIENTAL
-MEMORÁNDUM
-
-FECHA: ${currentDate}
-PARA: TODO EL PERSONAL
-DE: DIRECCIÓN GENERAL
-ASUNTO: [ESPECIFICAR]
-
-DISPOSICIONES:
-1. _________________________________
-
-ATENTAMENTE
-ING. EDUWIN IVÁN HERNÁNDEZ ZÁRATE
-DIRECTOR GENERAL`;
-        break;
-
-      case 'invoice':
-        text = `DATOS BANCARIOS
-
-CLIENTE: ${company}
-RFC: ${profileData.rfc || '[RFC CLIENTE]'}
-Dirección: ${address}
-Contacto: ${contact}
-Teléfono: ${phone}
-
-Beneficiario: SOLUCIÓN EN INGENIERÍA EJECUTIVA AMBIENTAL S.A. DE C.V.
-Banco: BBVA
-RFC: SIE240503N89
-CLABE: 012650001233239784
-
-Agradeceremos incluir el número de cotización o factura en el motivo de transferencia.`;
-        break;
-    }
-
-    const output = document.getElementById('textOutput');
-    if (output) output.textContent = text;
-  }
-
-  function copyTextToClipboard() {
-    const output = document.getElementById('textOutput');
-    if (output && output.textContent) {
-      copyToClipboard(output.textContent);
-      showStatus('textStatus','Texto copiado al portapapeles','success');
-    } else {
-      showStatus('textStatus','No hay texto para copiar','warning');
-    }
-  }
-
-  // ================== DOCUMENTOS PDF ==================
-  function generateDocumentData() {
-    showStatus('documentsStatus','Datos auto-completados desde el perfil','success');
-  }
-
-  function composeAuthorizedList() {
-    const checks = [...document.querySelectorAll('.authCheck')]
-      .filter(c => c.checked)
-      .map(c => c.value);
-
-    const other = document.getElementById('stps_otherName')?.value.trim();
-    if (other) checks.push(other);
-
-    const list = checks.join(', ');
-    const ta = document.getElementById('stps_authorizedPersons');
-    if (ta && !ta.value.trim()) ta.value = list;
-  }
-
-  function generateSTPS() {
-    composeAuthorizedList();
-    showStatus('documentsStatus','Carta Poder STPS auto-completada','success');
-  }
-
-  async function downloadSTPS() {
-    try {
-      const { jsPDF } = window.jspdf;
-
-      const currentDate = new Date();
-      const dateString = currentDate.toLocaleDateString('es-MX', { day:'numeric', month:'long', year:'numeric' });
-      const year = currentDate.getFullYear();
-
-      const authorizedPersons = document.getElementById('stps_authorizedPersons')?.value || '[PERSONA(S) AUTORIZADA(S)]';
-      const witness1 = document.getElementById('stps_witness1')?.value || '[TESTIGO 1]';
-      const witness2 = document.getElementById('stps_witness2')?.value || '[TESTIGO 2]';
-
-      const companyName = profileData.companyName || '[RAZÓN SOCIAL]';
-      const address = profileData.evaluationAddress || '[DIRECCIÓN]';
-      const phone = profileData.requestorPhone || '[TELÉFONO]';
-      const email = profileData.reportEmail || '[CORREO]';
-      const legalRep = profileData.legalRep || '[REPRESENTANTE LEGAL]';
-
-      const pdf = new jsPDF('p','mm','a4');
-
-      const margin = 20;
-      let y = margin;
-      const lh = 5;
-      const pageW = pdf.internal.pageSize.width;
-      const maxW = pageW - margin*2;
-
-      function addCentered(text, size=11, bold=false){
-        pdf.setFont('helvetica', bold?'bold':'normal');
-        pdf.setFontSize(size);
-        const tw = pdf.getTextWidth(text);
-        pdf.text(text, (pageW-tw)/2, y);
-        y += lh;
-      }
-      function addText(text, size=10, bold=false, indent=0){
-        pdf.setFont('helvetica', bold?'bold':'normal');
-        pdf.setFontSize(size);
-        const lines = pdf.splitTextToSize(text, maxW - indent);
-        pdf.text(lines, margin+indent, y);
-        y += lines.length*lh;
-      }
-      function space(n=1){ y += n*lh; }
-
-      addCentered('SECRETARÍA DEL TRABAJO Y PREVISIÓN SOCIAL', 9, true);
-      addCentered(document.getElementById('stps_officeLine2')?.value || 'OFICINA DE REPRESENTACIÓN FEDERAL DEL TRABAJO EN EL ESTADO DE PUEBLA', 8, true);
-      addCentered(document.getElementById('stps_officeLine3')?.value || 'DOMICILIO', 7, true);
-
-      space(2);
-
-      pdf.setFont('helvetica','bold'); pdf.setFontSize(9);
-      const dateText = `Puebla, Puebla, a ${dateString}`;
-      const dateW = pdf.getTextWidth(dateText);
-      pdf.text(dateText, pageW - margin - dateW, y);
-      y += lh*2;
-
-      addText('Por este conducto y con fundamento en el Artículo 19 de la Ley Federal de Procedimiento Administrativo, autorizo mediante el presente escrito a:', 9);
-      space(0.5);
-      addText(authorizedPersons, 9, true);
-      space(0.5);
-
-      addText('Para que conjunta o indistintamente puedan:', 9);
-      addText('• Oír y recibir notificaciones', 9, false, 5);
-      addText('• Realizar trámites, gestiones y comparecencias necesarias', 9, false, 5);
-
-      const procedureText = '• Promover ante la Secretaría del Trabajo y Previsión Social los procedimientos administrativos correspondientes, incluyendo ingreso o recepción de oficios de registro, inspección, autorizaciones, continuidad de vigencias, aclaraciones, emplazamientos, recursos y cualquier asunto relativo a los recipientes sujetos a presión instalados en nuestra empresa';
-      const procLines = pdf.splitTextToSize(procedureText, maxW - 5);
-      pdf.text(procLines, margin+5, y);
-      y += procLines.length*lh;
-
-      space(0.5);
-      addText('DATOS DEL CENTRO DE TRABAJO:', 9, true);
-      addText(`Nombre/Razón Social: ${companyName}`, 9, false, 5);
-      const addrLines = pdf.splitTextToSize(`Domicilio: ${address}`, maxW - 5);
-      pdf.text(addrLines, margin+5, y); y += addrLines.length*lh;
-      addText(`Teléfono: ${phone}`, 9, false, 5);
-      addText(`Correo electrónico: ${email}`, 9, false, 5);
-
-      space(0.5);
-      addText('DOCUMENTOS QUE SE ANEXAN:', 9, true);
-      addText('• Copia simple de identificación oficial del Representante Legal', 9, false, 5);
-      addText('• Copia simple de identificación oficial de la(s) persona(s) autorizada(s)', 9, false, 5);
-      addText('• Copia simple de identificación oficial de los testigos', 9, false, 5);
-
-      space(0.5);
-      addText('Este documento se expide únicamente para los fines señalados y dirigido exclusivamente a la dependencia mencionada.', 9);
-      space(0.5);
-      addText(`VIGENCIA: Del ${dateString} al 31 de diciembre de ${year}`, 9, true);
-      space(0.5);
-      addText('Agradeciendo la atención prestada, quedo de ustedes.', 9);
-      space(2);
-
-      addCentered('ATENTAMENTE', 9, true);
-      space(3);
-
-      const sigW = 100;
-      const sigX = (pageW - sigW)/2;
-      pdf.line(sigX, y, sigX+sigW, y); y += lh;
-
-      addCentered(legalRep, 9, true);
-      addCentered('Representante Legal del Centro de Trabajo', 8);
-      space(2);
-
-      addCentered('TESTIGOS:', 9, true);
-      space(1);
-
-      const witnessY = y;
-      const leftX = margin + 25;
-      const rightX = pageW - margin - 75;
-      pdf.line(leftX, witnessY, leftX+50, witnessY);
-      pdf.line(rightX, witnessY, rightX+50, witnessY);
-
-      pdf.setFont('helvetica','normal'); pdf.setFontSize(8);
-      const w1 = witness1.length>25 ? witness1.slice(0,22)+'...' : witness1;
-      const w2 = witness2.length>25 ? witness2.slice(0,22)+'...' : witness2;
-      const w1W = pdf.getTextWidth(w1);
-      const w2W = pdf.getTextWidth(w2);
-      pdf.text(w1, leftX + (50-w1W)/2, witnessY+5);
-      pdf.text(w2, rightX + (50-w2W)/2, witnessY+5);
-
-      const safeName = companyName.replace(/[^a-zA-Z0-9]/g,'_');
-      pdf.save(`Carta_Poder_STPS_${safeName}_${currentDate.toISOString().split('T')[0]}.pdf`);
-      showStatus('documentsStatus','PDF descargado correctamente','success');
-    } catch(err){
-      console.error(err);
-      showStatus('documentsStatus','Error al generar PDF','error');
-    }
-  }
-
-  function generateServiceLetter(){ showStatus('documentsStatus','Función en desarrollo','warning'); }
-  function downloadServiceLetter(){ showStatus('documentsStatus','Función en desarrollo','warning'); }
-  function generateComplianceLetter(){ showStatus('documentsStatus','Función en desarrollo','warning'); }
-  function downloadComplianceLetter(){ showStatus('documentsStatus','Función en desarrollo','warning'); }
-  function generateMeetingAct(){ showStatus('documentsStatus','Función en desarrollo','warning'); }
-  function downloadMeetingAct(){ showStatus('documentsStatus','Función en desarrollo','warning'); }
-
   // ================== INIT ==================
   document.addEventListener('DOMContentLoaded', () => {
     const fileInput = document.getElementById('profileFile');
@@ -1463,11 +959,6 @@ Agradeceremos incluir el número de cotización o factura en el motivo de transf
     document.querySelectorAll('input[name="orderSeries"]').forEach(r => r.addEventListener('change', updateOrderNumber));
     updateOrderNumber();
 
-    // Listeners STPS
-    document.querySelectorAll('.authCheck').forEach(ch => ch.addEventListener('change', composeAuthorizedList));
-    const stpsOther = document.getElementById('stps_otherName');
-    if (stpsOther) stpsOther.addEventListener('input', composeAuthorizedList);
-
     // Sincronizar al cambiar tab
     document.querySelectorAll('.nav-tab').forEach(tab => tab.addEventListener('click', syncData));
 
@@ -1492,20 +983,6 @@ Agradeceremos incluir el número de cotización o factura en el motivo de transf
 
   window.updateOrderNumber = updateOrderNumber;
   window.registerToSheets = registerToSheets;
-
-  window.generateTextFromProfile = generateTextFromProfile;
-  window.selectTextTemplate = selectTextTemplate;
-  window.copyTextToClipboard = copyTextToClipboard;
-
-  window.generateDocumentData = generateDocumentData;
-  window.generateSTPS = generateSTPS;
-  window.downloadSTPS = downloadSTPS;
-  window.generateServiceLetter = generateServiceLetter;
-  window.downloadServiceLetter = downloadServiceLetter;
-  window.generateComplianceLetter = generateComplianceLetter;
-  window.downloadComplianceLetter = downloadComplianceLetter;
-  window.generateMeetingAct = generateMeetingAct;
-  window.downloadMeetingAct = downloadMeetingAct;
 
   window.syncData = syncData;
 </script>
