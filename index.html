@@ -149,10 +149,6 @@
       </label>
       <span id="fileSelectedName" style="font-size:10px;color:#666;margin-right:10px;">No se ha seleccionado ningún archivo.</span>
       <button onclick="loadProfile()">Cargar Perfil</button>
-      <button onclick="saveProfile()">Guardar Perfil</button>
-      <button onclick="downloadProfileTemplate()">Plantilla Perfil</button>
-      <button onclick="exportToExcelFormat()">Exportar Formato Excel</button>
-      <button onclick="sendToClient()">Enviar a Cliente</button>
       <span id="profileStatus"></span>
     </div>
 
@@ -183,7 +179,7 @@
           <div class="form-group"><label>Teléfono</label><input type="tel" id="requestorPhone" onchange="syncData()" data-excel="I7" placeholder="Teléfono de la empresa"></div>
           <div class="form-group full-width"><label>Denominación/Razón Social</label><input type="text" id="companyName" onchange="syncData()" data-excel="D5"></div>
           <div class="form-group"><label>RFC</label><input type="text" id="rfc" onchange="syncData()" data-excel="D7"></div>
-          <div class="form-group"><label>Sucursal</label><input type="text" id="branch" onchange="syncData()" placeholder="Ej: Sucursal Centro, Planta Norte"></div>
+          <div class="form-group"><label>Sucursal</label><input type="text" id="branch" onchange="syncData()" data-excel="D6" placeholder="Ej: Sucursal Centro, Planta Norte"></div>
           <div class="form-group full-width"><label>Representante Legal</label><input type="text" id="legalRep" onchange="syncData()" data-excel="D9"></div>
           <div class="form-group full-width"><label>Dirección donde se evaluará</label><textarea id="evaluationAddress" onchange="syncData()" data-excel="D11"></textarea></div>
           <div class="form-group"><label>Responsable de atendernos</label><input type="text" id="contactPerson" onchange="syncData()" data-excel="D13"></div>
@@ -220,7 +216,6 @@
       <strong>🔧 Gestión de Orden:</strong>
       <button onclick="generateWorkOrder()">Generar desde Perfil</button>
       <button onclick="registerToSheets()" style="background:#007bff;">📊 Registrar en Sheets</button>
-      <button onclick="saveWorkOrder()">Guardar Orden</button>
       <button onclick="printWorkOrder()">Imprimir/PDF</button>
       <button onclick="sendWorkOrder()">Enviar por Email</button>
       <span id="workorderStatus"></span>
@@ -388,7 +383,7 @@
   let workOrderData = {};
 
   const excelCellMapping = {
-    'requestorName':'D3','companyName':'D5','rfc':'D7','requestorPhone':'I7','legalRep':'D9',
+    'requestorName':'D3','companyName':'D5','branch':'D6','rfc':'D7','requestorPhone':'I7','legalRep':'D9',
     'evaluationAddress':'D11','contactPerson':'D13','contactPhone':'I13','businessType':'D15',
     'mainActivity':'D17','patronalRegistry':'D19','operationCapacity':'D21','installedCapacity':'I21',
     'workSchedule':'D23','reportRecipientName':'D26','reportEmail':'D30','reportRecipientPosition':'D28'
